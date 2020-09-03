@@ -2,6 +2,7 @@ import ast
 import csv
 import fractions
 import math
+import os
 from . import utilities_general, utilities_music, prime_list, constants
 
 LONG_LIST_OF_PRIMES = prime_list.PrimeList(2**24) #if this value is too low there will be errors when trying to factor very large numbers
@@ -9,7 +10,8 @@ DEFAULT_MONZO_PRIMES = prime_list.PrimeList(48).primes #all primes up to 47 by d
 
 class Pitch():
 
-    def __init__(self,
+    def __init__(
+        self,
         p = (1, 1),
         rp = "A4",
         rf = 440.0,
@@ -52,7 +54,8 @@ class Pitch():
         self.pitch_info = self._pitch_info()
 
     def create_strings_for_print_and_txt(self, variety = "basic"):
-        basic_info_strings = ["",
+        basic_info_strings = [
+            "",
             "BASIC INFO",
             "ratio: " + str(self.ratio),
             "monzo: " + str(self.monzo),
@@ -64,7 +67,8 @@ class Pitch():
             "Helmholtz-Ellis notation (text string, letter name): " + str((self.accidental_string, self.letter_name)),
             "12-ED2 pitch and cent deviation: " + str(self.letter_name_and_octave_and_cents),
             ""]
-        normalized_info_strings = ["",
+        normalized_info_strings = [
+            "",
             "NORMALIZED INFO",
             "normalized ratio: " + str(self.normalized_ratio),
             "normalized monzo: " + str(self.normalized_monzo),
@@ -72,7 +76,8 @@ class Pitch():
             "normalized complement: " + str(self.normalized_complement),
             "normalized harmonic distance: " + utilities_general.convert_data_to_readable_string(self.normalized_harmonic_distance, precision = self.precision),
             ""]
-        reference_info_strings = ["",
+        reference_info_strings = [
+            "",
             "REFERENCE INFO",
             "reference pitch (1/1): " + str(self.reference_pitch),
             "reference key number: " + utilities_general.convert_data_to_readable_string(self.reference_keynum, precision = self.precision),
@@ -88,7 +93,8 @@ class Pitch():
             output = basic_info_strings + normalized_info_strings[1:] + reference_info_strings[1:]
         return(output)
 
-    def get_enharmonics(self, 
+    def get_enharmonics(
+        self, 
         tolerance = 1.95, 
         limit = 23, 
         exclude_primes = [], 
@@ -233,7 +239,8 @@ class Pitch():
         for x in strings_to_print:
             print(x)
 
-    def print_info_enharmonics(self, 
+    def print_enharmonics_info(
+        self, 
         tolerance = 1.95, 
         limit = 23, 
         exclude_primes = [], 
@@ -241,7 +248,8 @@ class Pitch():
         max_hd = 30, 
         max_candidates = 10, 
         sort_by = "tolerance"):
-        enharmonics_info = self.get_enharmonics(tolerance = tolerance, 
+        enharmonics_info = self.get_enharmonics(
+            tolerance = tolerance, 
             limit = limit, 
             exclude_primes = exclude_primes, 
             max_symbols = max_symbols, 
@@ -249,7 +257,8 @@ class Pitch():
             max_candidates = max_candidates, 
             sort_by = sort_by)
         num_enharmonics = len(enharmonics_info)
-        header_strings = self._create_strings_for_enharmonics_header(tolerance = tolerance,
+        header_strings = self._create_strings_for_enharmonics_header(
+                tolerance = tolerance,
                 limit = limit,
                 exclude_primes = exclude_primes,
                 max_symbols = max_symbols,
@@ -281,7 +290,8 @@ class Pitch():
             precision = self.precision
         self.__init__(p = p, rp = rp, rf = rf, precision = precision)
 
-    def write_enharmonics_info_to_csv(self, 
+    def write_enharmonics_info_to_csv(
+        self, 
         tolerance = 1.95, 
         limit = 23, 
         exclude_primes = [], 
@@ -291,7 +301,8 @@ class Pitch():
         sort_by = "tolerance",
         output_directory = False,
         filename = "enharmonic_candidates.csv"):
-        enharmonics_info = self.get_enharmonics(tolerance = tolerance, 
+        enharmonics_info = self.get_enharmonics(
+            tolerance = tolerance, 
             limit = limit, 
             exclude_primes = exclude_primes, 
             max_symbols = max_symbols, 
@@ -299,7 +310,8 @@ class Pitch():
             max_candidates = max_candidates, 
             sort_by = sort_by)
         num_enharmonics = len(enharmonics_info)
-        header_strings = self._create_strings_for_enharmonics_header(tolerance = tolerance,
+        header_strings = self._create_strings_for_enharmonics_header(
+            tolerance = tolerance,
             limit = limit,
             exclude_primes = exclude_primes,
             max_symbols = max_symbols,
@@ -313,10 +325,21 @@ class Pitch():
         formatted_header.append(" ")
         final_info = formatted_header
         if output_directory == False:
-            output_directory = constants.DEFAULT_OUTPUT_DIRECTORY
+            output_directory = os.getcwd()
         path_to_write_file = output_directory + "/" + filename
         if num_enharmonics > 0:
-            data_types = ["", "ratio", "monzo", "freq (Hz)", "keynum", "primes", "hd", "HEJI", "12-ED2", "mel. ratio", "enh. size (cents)" ]
+            data_types = [
+                "", 
+                "ratio", 
+                "monzo", 
+                "freq (Hz)", 
+                "keynum", 
+                "primes", 
+                "hd", 
+                "HEJI", 
+                "12-ED2", 
+                "mel. ratio", 
+                "enh. size (cents)"]
             count = 0
             processed_info = []
             for x in enharmonics_info:
@@ -324,7 +347,11 @@ class Pitch():
                 ratio = x[0]
                 delta = x[1]
                 ei = x[3]
-                enharmonic_ici = Pitch(p = (ratio.numerator, ratio.denominator), rp = self.reference_pitch, rf = self.reference_freq, precision = self.precision)
+                enharmonic_ici = Pitch(
+                    p = (ratio.numerator, ratio.denominator), 
+                    rp = self.reference_pitch, 
+                    rf = self.reference_freq, 
+                    precision = self.precision)
                 stats_to_be_added = [count,
                     "'" + str(enharmonic_ici.ratio) + "'",
                     str(enharmonic_ici.monzo),
@@ -341,8 +368,10 @@ class Pitch():
             with open(path_to_write_file, "w") as output:
                 writer = csv.writer(output, lineterminator='\n')
                 writer.writerows(final_info)
+        print("file written to " + path_to_write_file)
 
-    def write_enharmonics_info_to_txt(self, 
+    def write_enharmonics_info_to_txt(
+        self, 
         tolerance = 1.95, 
         limit = 23, 
         exclude_primes = [], 
@@ -352,7 +381,8 @@ class Pitch():
         sort_by = "tolerance",
         output_directory = False,
         filename = "enharmonic_candidates.txt"):
-        enharmonics_info = self.get_enharmonics(tolerance = tolerance, 
+        enharmonics_info = self.get_enharmonics(
+            tolerance = tolerance, 
             limit = limit, 
             exclude_primes = exclude_primes, 
             max_symbols = max_symbols, 
@@ -360,7 +390,8 @@ class Pitch():
             max_candidates = max_candidates, 
             sort_by = sort_by)
         num_enharmonics = len(enharmonics_info)
-        header_strings = self._create_strings_for_enharmonics_header(tolerance = tolerance,
+        header_strings = self._create_strings_for_enharmonics_header(
+            tolerance = tolerance,
             limit = limit,
             exclude_primes = exclude_primes,
             max_symbols = max_symbols,
@@ -369,7 +400,7 @@ class Pitch():
             sort_by = sort_by,
             num_qualified_candidates = num_enharmonics)
         if output_directory == False:
-            output_directory = constants.DEFAULT_OUTPUT_DIRECTORY
+            output_directory = os.getcwd()
         path_to_write_file = output_directory + "/" + filename
         with open(path_to_write_file, "w") as output:
             for x in header_strings:
@@ -379,15 +410,17 @@ class Pitch():
                 enharmonics_strings = self._create_strings_for_enharmonics_info(enharmonics_info)
                 for x in enharmonics_strings:
                     output.write(x + "\n")
+        print("file written to " + path_to_write_file)
 
     def write_info_to_txt(self, variety = "all", output_directory = False, filename = "pitch_info.txt"):
         strings_to_write = self.create_strings_for_print_and_txt(variety = variety)
         if output_directory == False:
-            output_directory = constants.DEFAULT_OUTPUT_DIRECTORY
+            output_directory = os.getcwd()
         path_to_write_file = output_directory + "/" + filename
         with open(path_to_write_file, "w") as output:
             for x in strings_to_write:
                 output.write(x + "\n")
+        print("file written to " + path_to_write_file)
 
     def _complement(self):
         complement = 2 / self.ratio
@@ -403,7 +436,8 @@ class Pitch():
                 constituent_primes.append(vector_primes[i])
         return(constituent_primes)
 
-    def _create_strings_for_enharmonics_header(self, 
+    def _create_strings_for_enharmonics_header(
+        self, 
         tolerance = 1.95, 
         limit = 23, 
         exclude_primes = [], 
@@ -419,7 +453,8 @@ class Pitch():
                 output.append("excluded primes: " + str(exclude_primes))
             return(output)
                     
-        header_strings = ["ORIGINAL PITCH INFO"] + self.create_strings_for_print_and_txt(variety = "basic")[2:] + ["ENHARMONIC SELECTION CRITERIA", 
+        header_strings = ["ORIGINAL PITCH INFO"] + self.create_strings_for_print_and_txt(variety = "basic")[2:] + [
+            "ENHARMONIC SELECTION CRITERIA", 
             "tolerance (cents): " + utilities_general.convert_data_to_readable_string(tolerance, precision = 5),
             "prime limit: " + str(limit) ] + excluded_primes_string() + ["maximum number of HEJI symbols: " + str(max_symbols),
             "maximum mumber of candidates: " + str(max_candidates),
@@ -600,7 +635,8 @@ class Pitch():
             elif current_prime > 47:
                 accidental_undefined = True
                 letter_name_undefined = True
-            remaining_prime_adjustments = [[11, -1, ["4", "5"]],
+            remaining_prime_adjustments = [
+                [11, -1, ["4", "5"]],
                 [13, 3, ["0", "9"]],
                 [17, 7, [":", ";"]],
                 [19, -3, ["/", "*"]],
@@ -677,7 +713,8 @@ class Pitch():
         return((accidental_string, letter_name))
 
     def _pitch_info(self):
-        basic_info = [self.ratio,
+        basic_info = [
+            self.ratio,
             self.monzo,
             self.constituent_primes,
             self.freq,
@@ -686,12 +723,14 @@ class Pitch():
             self.harmonic_distance,
             (self.accidental_string, self.letter_name),
             self.letter_name_and_octave_and_cents]
-        normalized_info = [self.normalized_ratio,
+        normalized_info = [
+            self.normalized_ratio,
             self.normalized_monzo,
             self.keynum_class,
             self.normalized_complement,
             self.normalized_harmonic_distance]
-        reference_info = [self.reference_pitch,
+        reference_info = [
+            self.reference_pitch,
             self.reference_keynum,
             self.reference_freq]
         return([basic_info, normalized_info, reference_info])

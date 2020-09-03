@@ -10,13 +10,14 @@ setuptools.setup(
     license="GNU GPLv3",
     author="M.O. Abbott",
     author_email="moab_bot@protonmail.com",
-    description="utilities for just intonation pitch and pitch collection analysis",
+    description="a Python-based set of utilities for just intonation (JI) pitch and pitch collection research and analysis",
     url="https://github.com/moab-bot/jitools",
+    download_url = 'https://github.com/moab-bot/jitools/archive/v_01.tar.gz',
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GNU GPLv3",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.8.5',
 )

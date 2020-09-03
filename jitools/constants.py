@@ -1,7 +1,6 @@
 import pathlib
 
 PACKAGE_DIRECTORY = pathlib.Path(__file__).parent
-DEFAULT_OUTPUT_DIRECTORY = str(PACKAGE_DIRECTORY.parent) + "/output"
 RESOURCES_DIRECTORY = str(PACKAGE_DIRECTORY) + "/resources"
 
 SABAT_SCHWEINITZ_TUNEABLE_INTERVALS = [(1, 8),

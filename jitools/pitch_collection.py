@@ -1,6 +1,7 @@
+import csv
 import fractions
 import math
-import csv
+import os
 from functools import reduce
 from itertools import combinations, product
 from . import pitch, utilities_general, utilities_music, constants
@@ -8,66 +9,67 @@ from . import pitch, utilities_general, utilities_music, constants
 
 class PitchCollection():
 
-    def __init__(self,
+    def __init__(
+        self,
         pc = [(1, 1), (2, 1)],
         rp = "A4",
         rf = 440.0,
         tuneable_intervals = constants.SABAT_SCHWEINITZ_TUNEABLE_INTERVALS,
         precision = 5):
-            self.pc_raw = list(dict.fromkeys(pc))
-            self.reference_pitch = rp
-            self.reference_freq = rf
-            self.precision = precision
-            self.tuneable_intervals = utilities_general.tuples_to_fractions(tuneable_intervals)
-            self.info_by_pitch = self._info_by_pitch(self.pc_raw)
-            if isinstance(self.info_by_pitch, list):
-                self.sort_by(sort_by="ratios")
-                intervals_and_resultant_tones = self._intervals_and_resultant_tones()
-                self.intervals = intervals_and_resultant_tones[0]
-                self.tuneable_intervals = intervals_and_resultant_tones[1][0]
-                self.tuneable_pitch_pairs = intervals_and_resultant_tones[1][1]
-                self.non_tuneable_intervals = intervals_and_resultant_tones[1][2]
-                self.non_tuneable_pitch_pairs = intervals_and_resultant_tones[1][3]
-                self.difference_tones = intervals_and_resultant_tones[2]
-                self.tuneable_difference_tones = intervals_and_resultant_tones[3][0]
-                self.tuneable_difference_tone_pitch_pairs = intervals_and_resultant_tones[3][1]
-                self.non_tuneable_difference_tones = intervals_and_resultant_tones[3][2]
-                self.non_tuneable_difference_tone_pitch_pairs = intervals_and_resultant_tones[3][3]
-                self.summation_tones = intervals_and_resultant_tones[4]
-                self.tuneable_summation_tones = intervals_and_resultant_tones[5][0]
-                self.tuneable_summation_tone_pitch_pairs = intervals_and_resultant_tones[5][1]
-                self.non_tuneable_summation_tones = intervals_and_resultant_tones[5][2]
-                self.non_tuneable_summation_tone_pitch_pairs = intervals_and_resultant_tones[5][3]
-                self.pc_plus_resultant_tones = self._pc_plus_resultant_tones()
-                self.pc_plus_resultant_tones_as_harmonics = self._harmonics(self.pc_plus_resultant_tones)
+        self.pc_raw = list(dict.fromkeys(pc))
+        self.reference_pitch = rp
+        self.reference_freq = rf
+        self.precision = precision
+        self.tuneable_intervals = utilities_general.tuples_to_fractions(tuneable_intervals)
+        self.info_by_pitch = self._info_by_pitch(self.pc_raw)
+        if isinstance(self.info_by_pitch, list):
+            self.sort_by(sort_by="ratios")
+            intervals_and_resultant_tones = self._intervals_and_resultant_tones()
+            self.intervals = intervals_and_resultant_tones[0]
+            self.tuneable_intervals = intervals_and_resultant_tones[1][0]
+            self.tuneable_pitch_pairs = intervals_and_resultant_tones[1][1]
+            self.non_tuneable_intervals = intervals_and_resultant_tones[1][2]
+            self.non_tuneable_pitch_pairs = intervals_and_resultant_tones[1][3]
+            self.difference_tones = intervals_and_resultant_tones[2]
+            self.tuneable_difference_tones = intervals_and_resultant_tones[3][0]
+            self.tuneable_difference_tone_pitch_pairs = intervals_and_resultant_tones[3][1]
+            self.non_tuneable_difference_tones = intervals_and_resultant_tones[3][2]
+            self.non_tuneable_difference_tone_pitch_pairs = intervals_and_resultant_tones[3][3]
+            self.summation_tones = intervals_and_resultant_tones[4]
+            self.tuneable_summation_tones = intervals_and_resultant_tones[5][0]
+            self.tuneable_summation_tone_pitch_pairs = intervals_and_resultant_tones[5][1]
+            self.non_tuneable_summation_tones = intervals_and_resultant_tones[5][2]
+            self.non_tuneable_summation_tone_pitch_pairs = intervals_and_resultant_tones[5][3]
+            self.pc_plus_resultant_tones = self._pc_plus_resultant_tones()
+            self.pc_plus_resultant_tones_as_harmonics = self._harmonics(self.pc_plus_resultant_tones)
 
-                self.inversion = self._inversion()
-                self.inversion_harmonics = self._harmonics(self.inversion)
-                self.intervals_sequential = self._intervals_sequential()
+            self.inversion = self._inversion()
+            self.inversion_harmonics = self._harmonics(self.inversion)
+            self.intervals_sequential = self._intervals_sequential()
                 
-                self.avg_ratio = sum(self.ratios) / len(self.ratios)
-                self.avg_freq = sum(self.freqs) / len(self.freqs)
-                self.avg_keynum = utilities_music.cpsmidi(self.avg_freq, self.reference_freq, self.reference_keynum)
-                self.minimum_ratio = min(self.ratios)
-                self.minimum_freq = min(self.freqs)
-                self.minimum_keynum = min(self.keynums)
-                self.maximum_ratio = max(self.ratios)
-                self.maximum_freq = max(self.freqs)
-                self.maximum_keynum = max(self.keynums)
-                self.ratio_span = self.maximum_ratio / self.minimum_ratio
-                self.freq_span = self.maximum_freq - self.minimum_freq
-                self.keynum_span = self.maximum_keynum - self.minimum_keynum
-                self.cents_span = self.keynum_span * 100
+            self.avg_ratio = sum(self.ratios) / len(self.ratios)
+            self.avg_freq = sum(self.freqs) / len(self.freqs)
+            self.avg_keynum = utilities_music.cpsmidi(self.avg_freq, self.reference_freq, self.reference_keynum)
+            self.minimum_ratio = min(self.ratios)
+            self.minimum_freq = min(self.freqs)
+            self.minimum_keynum = min(self.keynums)
+            self.maximum_ratio = max(self.ratios)
+            self.maximum_freq = max(self.freqs)
+            self.maximum_keynum = max(self.keynums)
+            self.ratio_span = self.maximum_ratio / self.minimum_ratio
+            self.freq_span = self.maximum_freq - self.minimum_freq
+            self.keynum_span = self.maximum_keynum - self.minimum_keynum
+            self.cents_span = self.keynum_span * 100
                 
-                self.harmonics = self._harmonics(self.ratios)
-                self.periodicity_pitch = self._periodicity_pitch()
-                self.least_common_partial = self._least_common_partial()[0]
-                self.least_common_partial_freq = self._least_common_partial()[1]
-                self.constituent_primes = sorted(list(dict.fromkeys([p for lop in self.constituent_primes_by_pitch for p in lop])))
-                self.hd_sum = self._hd_sum()
-                self.hd_avg = self.hd_sum / len(self.pc_raw)
-                self.harmonic_intersection = self._harmonic_intersection()
-                self.harmonic_disjunction = 1 - self.harmonic_intersection
+            self.harmonics = self._harmonics(self.ratios)
+            self.periodicity_pitch = self._periodicity_pitch()
+            self.least_common_partial = self._least_common_partial()[0]
+            self.least_common_partial_freq = self._least_common_partial()[1]
+            self.constituent_primes = sorted(list(dict.fromkeys([p for lop in self.constituent_primes_by_pitch for p in lop])))
+            self.hd_sum = self._hd_sum()
+            self.hd_avg = self.hd_sum / len(self.pc_raw)
+            self.harmonic_intersection = self._harmonic_intersection()
+            self.harmonic_disjunction = 1 - self.harmonic_intersection
 
     def print_info(self, variety = "basic"):
         strings_to_print = self._create_strings_for_print_and_txt(variety = variety)
@@ -75,7 +77,12 @@ class PitchCollection():
             print(x)
 
     def sort_by(self, sort_by = "ratios"):
-        parameter_index_pairs = [["ratios", 1], ["keynum classes", 5], ["normalized ratios", 10], ["harmonic distances", 11], ["normalized harmonic distances", 14]]
+        parameter_index_pairs = [
+            ["ratios", 1], 
+            ["keynum classes", 5], 
+            ["normalized ratios", 10], 
+            ["harmonic distances", 11], 
+            ["normalized harmonic distances", 14]]
         if sort_by == "reset":
             self.info_by_pitch = self._info_by_pitch(self.pc_raw)
         else:
@@ -95,7 +102,13 @@ class PitchCollection():
         transposed_pitches = [x * transposition_ratio for x in self.ratios]
         self.update(pc = transposed_pitches)
 
-    def update(self, pc = False, rp = False, rf = False, tuneable_intervals = False, precision = False):
+    def update(
+        self, 
+        pc = False, 
+        rp = False, 
+        rf = False, 
+        tuneable_intervals = False, 
+        precision = False):
         if not rp:
             rp = self.reference_pitch
         if not rf:
@@ -106,14 +119,30 @@ class PitchCollection():
             tuneable_intervals = self.tuneable_intervals
         if not precision:
             precision = self.precision
-        self.__init__(pc = pc, rp = rp, rf = rf, tuneable_intervals = tuneable_intervals, precision = precision)    
+        self.__init__(
+            pc = pc, 
+            rp = rp, 
+            rf = rf, 
+            tuneable_intervals = tuneable_intervals, 
+            precision = precision)    
 
     def write_info_to_csv(self, output_directory = False, filename = "pitch_collection_info.csv"):
         final_info = []
         if output_directory == False:
-            output_directory = constants.DEFAULT_OUTPUT_DIRECTORY
+            output_directory = os.getcwd()
         path_to_write_file = output_directory + "/" + filename
-        data_types = ["", "harm.", "ratio", "monzo", "freq (Hz)", "keynum", "keynum cl.", "primes", "hd", "HEJI", "12-ED2"]
+        data_types = [
+            "", 
+            "harm.", 
+            "ratio", 
+            "monzo", 
+            "freq (Hz)", 
+            "keynum", 
+            "keynum cl.", 
+            "primes", 
+            "hd", 
+            "HEJI", 
+            "12-ED2"]
         count = 0
         processed_info = []
         for x in self.info_by_pitch:
@@ -128,7 +157,8 @@ class PitchCollection():
             harmonic_distance = x[13]
             notation = x[8]
             letter_name_and_octave_and_cents = x[9]
-            stats_to_be_added = [count,
+            stats_to_be_added = [
+                count,
                 str(harm),
                 "'" + str(ratio) + "'",
                 str(monzo),
@@ -144,18 +174,21 @@ class PitchCollection():
         with open(path_to_write_file, "w") as output:
             writer = csv.writer(output, lineterminator='\n')
             writer.writerows(final_info)
+        print("file written to " + path_to_write_file)
 
     def write_info_to_txt(self, variety = "all", output_directory = False, filename = "pitch_collection_info.txt"):
         strings_to_write = self._create_strings_for_print_and_txt(variety = variety)
         if output_directory == False:
-            output_directory = constants.DEFAULT_OUTPUT_DIRECTORY
+            output_directory = os.getcwd()
         path_to_write_file = output_directory + "/" + filename
         with open(path_to_write_file, "w") as output:
             for x in strings_to_write:
                 output.write(x + "\n")
+        print("file written to " + path_to_write_file)
 
     def _create_strings_for_print_and_txt(self, variety = "basic"):
-        basic_info_strings = ["",
+        basic_info_strings = [
+            "",
             "BASIC INFO",
             "ratios: " + str([utilities_general.convert_data_to_readable_string(x) for x in self.ratios]),
             "frequencies (Hz): " + str([utilities_general.convert_data_to_readable_string(x, precision = self.precision) for x in self.freqs]),
@@ -168,7 +201,8 @@ class PitchCollection():
             "inversion: " + str([utilities_general.convert_data_to_readable_string(x) for x in self.inversion]),
             ""]
         
-        quantitative_info_strings = ["",
+        quantitative_info_strings = [
+            "",
             "QUANTITATIVE INFO",
             "average ratio: " + str(self.avg_ratio),
             "minimum ratio: " + str(self.minimum_ratio),
@@ -185,7 +219,8 @@ class PitchCollection():
             "span in cents: " + utilities_general.convert_data_to_readable_string(self.cents_span, precision = self.precision),
             ""]
         
-        analytic_info_strings = ["",
+        analytic_info_strings = [
+            "",
             "ANALYTIC INFO",
             "all intervals: " + str([utilities_general.convert_data_to_readable_string(x) for x in self.intervals]),
             "tuneable intervals: " + str([utilities_general.convert_data_to_readable_string(x) for x in self.tuneable_intervals]),
@@ -218,25 +253,28 @@ class PitchCollection():
             inversion_info_strings[1] = "INVERSION INFO"
 
         if variety == "resultants" or variety == "all":
-            difference_tones_ci = PitchCollection(pc = self.difference_tones, 
+            difference_tones_ci = PitchCollection(
+                pc = self.difference_tones, 
                 rp = self.reference_pitch, 
                 rf = self.reference_freq,
                 precision = self.precision)
             difference_tones_info_strings = difference_tones_ci._create_strings_for_print_and_txt(variety = "basic")
-            difference_tones_info_strings[1] = "DIFFERENCE TONES"
+            difference_tones_info_strings[1] = "FIRST-ORDER DIFFERENCE TONES"
             tuneable_difference_tones_strings = "tuneable ratios: " + str([utilities_general.convert_data_to_readable_string(x) for x in self.tuneable_difference_tones])
-            difference_tones_info_strings = difference_tones_info_strings[:3] + [tuneable_difference_tones_strings] + difference_tones_info_strings[3:]
-            summation_tones_ci = PitchCollection(pc = self.summation_tones, 
+            difference_tones_info_strings = difference_tones_info_strings[:3] + [tuneable_difference_tones_strings] + difference_tones_info_strings[3:][:-5] + [""]
+            summation_tones_ci = PitchCollection(
+                pc = self.summation_tones, 
                 rp = self.reference_pitch, 
                 rf = self.reference_freq,
                 precision = self.precision)
             summation_tones_info_strings = summation_tones_ci._create_strings_for_print_and_txt(variety = "basic")
-            summation_tones_info_strings[1] = "SUMMATION TONES"
+            summation_tones_info_strings[1] = "FIRST-ORDER SUMMATION TONES"
             tuneable_summation_tones_strings = "tuneable ratios: " + str([utilities_general.convert_data_to_readable_string(x) for x in self.tuneable_summation_tones])
-            summation_tones_info_strings = summation_tones_info_strings[:3] + [tuneable_summation_tones_strings] + summation_tones_info_strings[3:]
+            summation_tones_info_strings = summation_tones_info_strings[:3] + [tuneable_summation_tones_strings] + summation_tones_info_strings[3:][:-5] + [""]
             resultant_tones_info_strings = difference_tones_info_strings + summation_tones_info_strings[1:]
         
-        reference_info_strings = pitch.Pitch(rp = self.reference_pitch,
+        reference_info_strings = pitch.Pitch(
+            rp = self.reference_pitch,
             rf = self.reference_freq,
             precision = self.precision).create_strings_for_print_and_txt(variety = "reference")
 
