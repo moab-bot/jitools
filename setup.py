@@ -5,7 +5,6 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="jitools",
-    packages = ['jitools']
     version="0.1",
     license="GNU GPLv3",
     author="M.O. Abbott",
@@ -16,7 +15,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GNU GPLv3",
+        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.8.5',
