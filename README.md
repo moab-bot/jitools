@@ -264,7 +264,7 @@ enharmonic interval size (cents): -0.17481
 ### jitools.PitchCollection()
 The second essential class in jitools is **jitools.PitchCollection()**. In a nutshell, this class allows collections of **jitools.Pitch()** instances -- which can be regarded as chords, scales, or pitch aggregates -- to be collectively analyzed as a group.
 
-Instead of a duple, **jitools.PitchCollection()** takes ```pc``` as its principal argument, which is a list of two-element duples, each of which represent a pitch ratio. As with **jitools.Pitch()**, a letter-name reference pitch ```rp``` and reference frequency ```rf``` may be optionally defined, or else A4 = 440Hz is assumed.
+Instead of a duple, **jitools.PitchCollection()** takes ```pc``` as its principal argument, which is a list of two-element duples, each of which represents a pitch ratio. As with **jitools.Pitch()**, a letter-name reference pitch ```rp``` and reference frequency ```rf``` may be optionally defined, or else A4 = 440Hz is assumed.
 
 As with **jitools.Pitch()**, a **jitools.PitchCollection()** instance stores several important attributes about the pitch collection that may be directly referred to by the user:
 
