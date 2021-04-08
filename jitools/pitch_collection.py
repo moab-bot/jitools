@@ -14,13 +14,15 @@ class PitchCollection():
         pc = [(1, 1), (2, 1)],
         rp = "A4",
         rf = 440.0,
-        tuneable_intervals = constants.SABAT_SCHWEINITZ_TUNEABLE_INTERVALS,
+        ti = constants.SABAT_SCHWEINITZ_TUNEABLE_INTERVALS,
         precision = 5):
-        self.pc_raw = list(dict.fromkeys(pc))
+        self.pc_raw = []
+        [self.pc_raw.append(x) for x in pc if x not in self.pc_raw]
         self.reference_pitch = rp
         self.reference_freq = rf
         self.precision = precision
-        self.tuneable_intervals = utilities_general.tuples_to_fractions(tuneable_intervals)
+        self.allowed_tuneable_intervals_as_tuples = ti
+        self.allowed_tuneable_intervals = utilities_general.tuples_to_fractions(self.allowed_tuneable_intervals_as_tuples)
         self.info_by_pitch = self._info_by_pitch(self.pc_raw)
         if isinstance(self.info_by_pitch, list):
             self.sort_by(sort_by="ratios")
@@ -81,21 +83,18 @@ class PitchCollection():
             ["ratios", 1], 
             ["keynum classes", 5], 
             ["normalized ratios", 10], 
-            ["harmonic distances", 11], 
+            ["harmonic distances", 13], 
             ["normalized harmonic distances", 14]]
-        if sort_by == "reset":
-            self.info_by_pitch = self._info_by_pitch(self.pc_raw)
-        else:
-            sort_by_index = -1
-            for pip in parameter_index_pairs:
-                if pip[0] == sort_by:
-                    sort_by_index = pip[1]
-            self.info_by_pitch.sort(key=lambda x: x[sort_by_index])
-            self._info_by_parameter()
-            self.inversion = self._inversion()
-            self.intervals_sequential = self._intervals_sequential()
-            if sort_by_index < 0:
-                raise ValueError("cannot sort by this parameter")
+        sort_by_index = -1
+        for pip in parameter_index_pairs:
+            if pip[0] == sort_by:
+                sort_by_index = pip[1]
+        self.info_by_pitch.sort(key=lambda x: x[sort_by_index])
+        self._info_by_parameter()
+        self.inversion = self._inversion()
+        self.intervals_sequential = self._intervals_sequential()
+        if sort_by_index < 0:
+            raise ValueError("cannot sort by this parameter")
 
     def transpose(self, interval):
         transposition_ratio = pitch.Pitch(p = interval).ratio
@@ -107,7 +106,7 @@ class PitchCollection():
         pc = False, 
         rp = False, 
         rf = False, 
-        tuneable_intervals = False, 
+        ti = False, 
         precision = False):
         if not rp:
             rp = self.reference_pitch
@@ -115,16 +114,16 @@ class PitchCollection():
             rf = self.reference_freq
         if not pc:
             pc = self.pc_raw
-        if not tuneable_intervals:
-            tuneable_intervals = self.tuneable_intervals
+        if not ti:
+            ti = self.allowed_tuneable_intervals_as_tuples
         if not precision:
             precision = self.precision
         self.__init__(
             pc = pc, 
-            rp = rp, 
+            rp = rp,
             rf = rf, 
-            tuneable_intervals = tuneable_intervals, 
-            precision = precision)    
+            ti = ti, 
+            precision = precision)
 
     def write_info_to_csv(self, output_directory = False, filename = "pitch_collection_info.csv"):
         final_info = []
@@ -312,7 +311,8 @@ class PitchCollection():
         return(output)
 
     def _harmonics(self, ratios):
-        ratio_multiplier = reduce(fractions.gcd,(ratios)).denominator
+        ratio_denominators = [x.denominator for x in ratios]
+        ratio_multiplier = reduce(math.lcm, ratio_denominators)
         harmonics = [int(x * ratio_multiplier) for x in ratios]
         return(harmonics)
 
@@ -460,7 +460,7 @@ class PitchCollection():
 
     def _is_tuneable(self, ratio):
         is_tuneable = False
-        if ratio in self.tuneable_intervals:
+        if ratio in self.allowed_tuneable_intervals:
             is_tuneable = True
         return(is_tuneable) 
 

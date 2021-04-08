@@ -2,29 +2,31 @@
 
 ### Introduction
 
-**jitools** is a Python-based set of utilities for **just intonation (JI)** pitch and pitch collection research and analysis. For the ambitious, it may also be incorporated into workflows for computer-assisted algorithmic composition.
+**jitools** is a Python-based set of utilities for **just intonation (JI)** pitch and pitch collection research and analysis. It may also be incorporated into workflows for computer-assisted algorithmic composition.
 
-**jitools** shares some functionalities with Thomas Nicholson's JavaScript-based online resource, the **[Plainsound Harmonic Space Calculator](https://www.plainsound.org/HEJI/)**.
+**jitools** shares some functionalities with **[Thomas Nicholson](https://thomasnicholson.ca/)**'s JavaScript-based online resource, the **[Plainsound Harmonic Space Calculator](https://www.plainsound.org/HEJI/)**.
 
-**jitools** requires Python 3.8.5 or above.
+**jitools** works on Python 3.9.4+.
 
 ### Just Intonation
 
 JI is a musical model wherein the intervals between pitches are, as best as possible, tuned as small natural number frequency ratios. Aside from this basic tenet, there are no restrictions on the aesthetic or style of JI music. That said, music in JI often has certain tendencies that highlight or enable its very precise tuning.
 
-JI has its own particular set of analytical concerns for composers, music theorists, and musicians. Many of these issues are well-described in the 2018 paper **"Fundamental Principles of Just Intonation and Microtonal Composition"** by Thomas Nicholson and Marc Sabat, which is available **[here](https://marsbat.space/pdfs/JI.pdf)**. This paper is essential reading for anyone interested in JI, and for anyone who wants to use or understand **jitools**.
+JI has its own particular set of analytical concerns for composers, music theorists, and musicians. Many of these issues are well-described in the 2018 paper **["Fundamental Principles of Just Intonation and Microtonal Composition"](https://marsbat.space/pdfs/JI.pdf)** by Thomas Nicholson and **[Marc Sabat](https://www.marsbat.space/)**. This paper is essential reading for anyone interested in JI and for anyone who wants to use or understand **jitools**.
 
 ### jitools - Installation
 
-~$ sudo pip install jitools
+~$ pip3 install jitools
 
 ### jitools.Pitch()
 
-In JI, pitches are conceptualized as frequency ratios, which are often expressed as fractions, with respect to some known reference pitch. The known reference pitch is, by convention, known as **1/1**. Any frequency can serve as 1/1, its frequency just needs to be known. For example, if 1/1 is A4 = 440Hz, then the frequency of 3/2 would be 440 * 3/2, or 660Hz. But, if 1/1 is G4 = 392Hz, then the frequency of 3/2 would be 392 * 3/2, or 588Hz.
+In JI pitches are conceptualized as **frequency ratios**, which are often expressed as fractions with respect to some known reference pitch. The reference pitch is, by convention, labeled as **1/1**. Any pitch can function as 1/1, its frequency just needs to be known. 
 
-The most essential class in jitools is **jitools.Pitch()**. The principal argument of the class is ```p```, a tuple consisting of two positive integers that represent the proportions of a pitch's ratio. Since a ratio only has meaning with respect to a known reference pitch, when defining an instance of  **jitools.Pitch()**, the user may optionally define the letter-name pitch ```rp``` and frequency ```rf``` of 1/1. Otherwise, 1/1 is assumed to be A4 = 440Hz.
+All other pitches are then labeled according to their frequency ratio relationship to 1/1. For example, if 1/1 = A4 = 440Hz, then the frequency of 3/2 would be 440 * 3/2 = 660Hz. But, if 1/1 = G4 = 392Hz, then the frequency of 3/2 would be 392 * 3/2 = 588Hz.
 
-After defining an instance of **jitools.Pitch()** in terms of its ratio, the class automatically calculates many attributes relevant for JI analysis. These attributes are stored internally and can later be referred to by the user. Here are a few examples of such attributes:
+The most essential class in jitools is **jitools.Pitch()**, which holds information about any single pitch. The principal argument of the class is ```p```, a tuple consisting of two positive integers that represent the numerator and denominator of the pitch's ratio. Since the ratio only has meaning with respect to a known reference pitch, when creating an instance of  **jitools.Pitch()** the user may optionally define the letter-name pitch ```rp``` and frequency ```rf``` of 1/1. The default values are ```"A4"``` and ```440``` (Hz).
+
+After defining an instance of **jitools.Pitch()** in terms of its ratio, the class automatically calculates many attributes relevant for JI analysis. These values can later be referenced by the user. Here are a few examples of such attributes:
 
 ```
 >>> import jitools
@@ -39,7 +41,6 @@ After defining an instance of **jitools.Pitch()** in terms of its ratio, the cla
 Here is the same information about 3/2, but with 1/1 defined as G4 = 392Hz:
 
 ```
->>> import jitools
 >>> test_pitch = jitools.Pitch(p=(3, 2), rp="G4", rf=392)
 >>> test_pitch.freq
 588.0
@@ -48,25 +49,23 @@ Here is the same information about 3/2, but with 1/1 defined as G4 = 392Hz:
 >>> test_pitch.distance_in_cents_from_reference
 701.955000865388
 ```
-JI pitches usually deviate from their nearest 12-TET counterparts by some number of **cents** (1 cent = 1/100 of a 12-TET semitone or 1/1200 of an octave), and knowing this information is useful for comparing JI pitches to their 12-TET counterparts:
+JI pitches usually deviate from a nearby 12-tone equal temperament (12-ED2) pitch by some number of **cents** (1 cent = 1/100 of a 12-ED2 semitone or 1/1200 of an octave), a measure developed by Alexander J. Ellis. Knowing a JI pitch's "cent deviation" is useful for comparing it to its closest 12-ED2 counterpart:
 
 ```
->>> import jitools
 >>> test_pitch = jitools.Pitch(p=(4, 7))
 >>> test_pitch.letter_name_and_octave_and_cents
 'B3 +31.17409'
 ```
 ### jitools.Pitch() - Notation
-There are various methods for JI pitch notation, including **[Ben Johnston's well-known system](https://www.kylegann.com/BJNotation.html)** and **[Sagittal](http://sagittal.org/)** notation, among others. Perhaps the foremost JI pitch notation system in wide use today is the **[Extended Helmholtz-Ellis JI Pitch Notation (HEJI)](https://marsbat.space/pdfs/HEJI2legend+seriespdf)**, jointly developed by Marc Sabat and Wolfgang von Schweinitz in the early 2000s. 
+There are various methods for JI pitch notation, including **[Ben Johnston's well-known system](https://www.kylegann.com/BJNotation.html)** and **[Sagittal](http://sagittal.org/)** notation, among others. Perhaps the foremost JI pitch notation system in wide use today is the **[Extended Helmholtz-Ellis JI Pitch Notation (HEJI)](https://marsbat.space/pdfs/HEJI2legend+series.pdf)**, originally developed by Marc Sabat and **[Wolfgang von Schweinitz](https://plainsound.org/artist/wolfgang_von_schweinitz.html)** in the early 2000s, and revised in 2020 by Sabat and Thomas Nicholson in collaboration with Schweinitz, **[Catherine Lamb](http://www.sacredrealism.org/catlamb/index.html)**, and myself. The revised version is known as **HEJI2**.
 
-In HEJI, each prime factor of a frequency ratio is denoted with a distinctive accidental glyph. These accidentals appear, alone or in various combinations, in front of letter-name notes on a conventional 5-line musical staff.
+In HEJI/HEJI2, each prime factor of a frequency ratio is denoted with a distinctive accidental glyph. These accidentals appear, alone or in various combinations, in front of letter-name notes on a conventional 5-line musical staff. Musicians familiar with the notation can then interpret the ratios and produce the desired sounds.
 
-The HEJI font is available as a cross-platform free download **[here](https://marsbat.space/HEJI2_web_release.zip)**, and once installed the HEJI glyphs may be used with any modern music notation program. The download includes a font map that links each glyph to a different keyboard character, allowing the HEJI symbols (and combinations thereof) to be typed as text strings.
+The HEJI2 font is available as a cross-platform free download **[here](https://marsbat.space/2021_HEJI2_web_release.zip)**. Once installed the HEJI2 fonts may be used with any modern music notation program. The glyphs are mapped to ordinary keyboard characters and may be typed. Accidentals and combinations of accidentals may be stored as text strings.
 
-**jitools.Pitch()** handles the creation of these HEJI text strings, along with assigning the correct letter-name pitch, hastening the translation from ratio-based thinking to HEJI notation.
+**jitools.Pitch()** handles the creation of these HEJI2 text strings based on the provided ratio and reference pitch information, and also assigns the correct letter-name pitch. This hastens the translation from ratio-based thinking to HEJI2 notation. One may copy-and-paste the strings while using the HEJI2 font in a notation program, for example. The ```.notation``` attribute stores a duple consisting of the HEJI2 text string and letter-name pitch:
 
 ```
->>> import jitools
 >>> test_pitch = jitools.Pitch(p=(25, 13))
 >>> test_pitch.notation
 ('9t', 'G')
@@ -75,7 +74,6 @@ The HEJI font is available as a cross-platform free download **[here](https://ma
 Since attributes of **jitools.Pitch()** can be opaque and difficult to get at, detailed reports about a pitch's attributes can be printed to the console in an easy-to-read format, with a simple method:
 
 ```
->>> import jitools
 >>> test_pitch = jitools.Pitch(p=(17, 11))
 >>> test_pitch.print_info()
 
@@ -91,10 +89,9 @@ Helmholtz-Ellis notation (text string, letter name): (':5v', 'E')
 12-ED2 pitch and cent deviation: F5 -46.36253
 
 ```
-Such reports can also be written to txt files. By default files are written to the user's current working directory, although the ```output_directory``` and ```filename``` can also be customized by the user:
+Such reports can also be written to ```txt``` files. By default files are written to the user's current working directory, although the ```output_directory``` and ```filename``` can also be customized by the user:
 
 ```
->>> import jitools
 >>> test_pitch = jitools.Pitch(p=(17, 11))
 >>> test_pitch.write_info_to_txt()
 file written to /current/working/directory/pitch_info.txt
@@ -102,23 +99,21 @@ file written to /current/working/directory/pitch_info.txt
 file written to /path/to/file/myfile.txt
 ```
 ### jitools.Pitch() - Enharmonic Search
-Another important functionality of **jitools.Pitch()** is **enharmonic search**. Enharmonics in JI are two rational pitches that are extremely close to each other in terms of pitch height -- generally within about 4 cents or less -- so close that the difference between their pitch heights cannot be perceived by ear, or at worst can barely be perceived in a harmonic context (see **[Nicholson/Sabat](https://marsbat.space/pdfs/JI.pdf)**, p. 16-19). 
+Another functionality of **jitools.Pitch()** is **enharmonic search**. Enharmonics in JI are two rational pitches that are extremely close to each other in terms of pitch height -- generally within about 4 cents or less -- so close that the difference between their pitch heights cannot be perceived by ear, or at worst can barely be perceived in a harmonic context (see **[Nicholson/Sabat](https://marsbat.space/pdfs/JI.pdf)**, p. 16-19). 
 
-Enharmonic assessment can be useful for a variety of purposes, particularly when dealing with more complex ratios that are unfamiliar, or cumbersome to notate and/or interpret.
+Enharmonic assessment can be useful for a variety of purposes, particularly when one has arrived at an extremely complex ratio that is unfamiliar or cumbersome to notate/interpret. Often, one or more simpler nearby ratios are available as alternatives.
 
 In **jitools.Pitch()** enharmonic information may be generated and stored internally as a list:
 
 ```
->>> import jitools
 >>> test_pitch = jitools.Pitch((711, 184))
 >>> test_pitch.get_enharmonics()
 [[Fraction(800, 207), 0.27053, 17.337343147274048, Fraction(6399, 6400)], [Fraction(2816, 729), -0.58462, 20.969206622964233, Fraction(518319, 518144)], [Fraction(11875, 3072), 0.64032, 25.12060239371419, Fraction(273024, 273125)], [Fraction(495, 128), 1.36911, 15.95128471496697, Fraction(1264, 1265)]]
 ```
 
-As a list this information is a little opaque, so enharmonics information may also be printed to the console in a easy-to-read format, or written to txt or csv files:
+As a list this information is a little opaque, so enharmonics information may also be printed to the console in a easy-to-read format, or written to ```txt``` or ```csv``` files:
 
 ```
->>> import jitools
 >>> test_pitch = jitools.Pitch((711, 184))
 >>> test_pitch.print_enharmonics_info()
 
@@ -203,14 +198,13 @@ Various constraints on an enharmonic search may be customized by the user, inclu
 *  ```tolerance```: how close the enharmonic must be to the original pitch, in cents (default = 1.95)
 *  ```limit```: maximum prime factor allowed (default = 23)  
 *  ```exclude_primes```: prime factors to be excluded, as a list (default = [])
-*  ```max_symbols```: maximum number of HEJI symbols (default = 2)
+*  ```max_symbols```: maximum number of HEJI2 symbols (default = 2)
 
-The ```sort_by``` method of an enharmonic search can also be changed. The default is to sort by ```"tolerance"```, which orders the enharmonics by how closely they match the pitch height of the original pitch (enharmonic interval size). But, the results may also be sorted by ```"harmonic distance"```, a measure developed by James Tenney which generally correlates to interval/ratio simplicity. (See **[Nicholson/Sabat](https://marsbat.space/pdfs/JI.pdf)**, p. 26-28, for more information about harmonic distance and other metrics invented by Tenney.)
+The ```sort_by``` method of an enharmonic search can also be changed. The default is to sort by ```"tolerance"```, which orders the enharmonics by how closely they match the pitch height of the original pitch (enharmonic melodic interval size). But, the results may also be sorted by ```"harmonic distance"```, a measure developed by James Tenney which generally correlates to interval/ratio simplicity. (See **[Nicholson/Sabat](https://marsbat.space/pdfs/JI.pdf)**, p. 26-28, for more information about harmonic distance and other metrics invented by Tenney.)
 
-In the example below, the same original pitch, 711/184, is used as in the example above, but the tolerance and allowed prime factors are more restricted. This disqualifies all of the enharmonics returned in the previous example. Even so, increasing the maximum allowed number of HEJI symbols yields two new 3-symbol enharmonics. The enharmonics are sorted by harmonic distance, which in this case does not correlate to tolerance:
+In the example below, the same original pitch is used as in the example above, but the tolerance and allowed prime factors are more restricted. This disqualifies all of the enharmonics returned in the previous example. Even so, increasing the maximum allowed number of HEJI2 symbols yields two new 3-symbol enharmonics. The enharmonics are sorted by harmonic distance, which in this case does not correlate to tolerance:
 
 ```
->>> import jitools
 >>> test_pitch = jitools.Pitch((711, 184))
 >>> test_pitch.print_enharmonics_info(tolerance=0.5, limit=17, exclude_primes=[7, 23], max_symbols=3, sort_by="harmonic distance")
 
@@ -262,14 +256,13 @@ enharmonic interval size (cents): -0.17481
  
 ```
 ### jitools.PitchCollection()
-The second essential class in jitools is **jitools.PitchCollection()**. In a nutshell, this class allows collections of **jitools.Pitch()** instances -- which can be regarded as chords, scales, or pitch aggregates -- to be collectively analyzed as a group.
+The second essential class in jitools is **jitools.PitchCollection()**. This class allows for collections of **jitools.Pitch()** instances -- which can be regarded as chords, scales, aggregates, or gamuts -- to be collectively analyzed as a group.
 
-Instead of a duple, **jitools.PitchCollection()** takes ```pc``` as its principal argument, which is a list of two-element duples, each of which represents a pitch ratio. As with **jitools.Pitch()**, a letter-name reference pitch ```rp``` and reference frequency ```rf``` may be optionally defined, or else A4 = 440Hz is assumed.
+**jitools.PitchCollection()** takes ```pc``` as its principal argument, a list of two-element duples. Each duple represents the ratio of a single pitch in the collection. As with **jitools.Pitch()**, a letter-name reference pitch ```rp``` and reference frequency ```rf``` may be optionally defined, otherwise the default values of ```"A4"``` and ```440``` (Hz) are used.
 
 As with **jitools.Pitch()**, a **jitools.PitchCollection()** instance stores several important attributes about the pitch collection that may be directly referred to by the user:
 
 ```
->>> import jitools
 >>> test_chord = jitools.PitchCollection([(1, 1), (5, 4), (3, 2)])
 >>> test_chord.ratios
 [Fraction(1, 1), Fraction(5, 4), Fraction(3, 2)]
@@ -283,7 +276,6 @@ As with **jitools.Pitch()**, a **jitools.PitchCollection()** instance stores sev
 One may also print information about a pitch collection to the console in an easy-to-read format:
 
 ```
->>> import jitools
 >>> test_chord = jitools.PitchCollection([(7, 8), (9, 7), (13, 8), (11, 6)])
 >>> test_chord.print_info()
 
@@ -299,10 +291,9 @@ normalized ratios: ['9/7', '13/8', '7/4', '11/6']
 inversion: ['7/8', '77/78', '539/432', '11/6']
 
 ```
-The above is the ```"basic"``` information about a pitch collection, which is the default information type returned when printing (or writing to txt, see below). Various other kinds of information can also be printed or written to txt:
+The above is the ```"basic"``` information about a pitch collection, which is the default information type returned when printing (or writing to ```txt```, see below). Various other kinds of information can also be printed or written to ```txt```:
 
 ```
->>> import jitools
 >>> test_chord = jitools.PitchCollection([(7, 8), (9, 7), (13, 8), (11, 6)])
 >>> test_chord.print_info("quantitative")
 
@@ -386,20 +377,21 @@ reference frequency: 440.0 Hz
 
 ```
 
-**jitools.PitchCollection()** information, as with **jitools.Pitch()** information, may be written to file, in this case as txt or csv:
+**jitools.PitchCollection()** information, as with **jitools.Pitch()** information, may be written to file, in this case as ```txt``` or ```csv```:
 
 ```
->>> import jitools
 >>> test_chord = jitools.PitchCollection([(9, 4), (15, 48), (21, 17)])
 >>> test_chord.write_info_to_txt()
 file written to /current/working/directory/pitch_collection_info.txt
 >>> test_chord.write_info_to_csv()
 file written to /current/working/directory/pitch_collection_info.csv
 ```
-
 ### State of the Project
-I view this project as being in its infancy, and I intend continually refine the code and add more features/tools as time allows. Short-term, I am aware of the need for:
+I view this project as being in its infancy, and I intend continually refine the code and add more features/tools as time allows. I am aware of the need for:
 
 *  comprehensive documentation
-*  tutorials and additional examples 
-*  better explanation of the JI theory jargon
+*  tutorials and additional examples (with notation)
+*  improving performance of **jitools.PitchCollection()** for larger pitch sets (> c. 12 pitches)
+*  exception/error handling
+
+Feel free to contact me if you have any feedback, suggestions, or requests.
