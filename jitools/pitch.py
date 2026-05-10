@@ -103,7 +103,8 @@ class Pitch():
         max_symbols: int = 2,
         max_hd: float = 30,
         max_candidates: int = 10,
-        sort_by: str = "tolerance") -> list[list]:
+        sort_by: str = "tolerance",
+        lookup_table_path: str | None = None) -> list[list]:
         """Return enharmonically close ratios within tolerance cents from the lookup table."""
         if exclude_primes is None:
             exclude_primes = []
@@ -111,7 +112,9 @@ class Pitch():
         fund_offset = self._fund_offset
         vector_primes = self._vector_primes
         reference_pc_height = Pitch(p = self.normalized_monzo, rp = self.reference_pitch, rf = self.reference_freq).distance_in_cents_from_reference % 1200.0
-        path_to_lookup_table = constants.RESOURCES_DIRECTORY + "/enharmonic_lookup_table.csv"
+        if lookup_table_path is None:
+            lookup_table_path = constants.RESOURCES_DIRECTORY + "/enharmonic_lookup_table.csv"
+        path_to_lookup_table = lookup_table_path
         with open(path_to_lookup_table, newline="") as f:
             reader = csv.reader(f)
             data = list(reader)
@@ -585,19 +588,12 @@ class Pitch():
 
     def _normalized_monzo(self, monzo: list[int]) -> list[int]:
         """Return monzo shifted by octaves so its corresponding ratio lies in [1, 2)."""
-        ratio = self.ratio
-        normalized_monzo = [] + monzo
-        while (ratio.numerator - ratio.denominator) < 0:
-            normalized_monzo[0] += 1
-            ratio = Pitch(p = normalized_monzo).ratio
-            if (ratio.numerator - ratio.denominator) >= 0:
-                break
-        while (ratio.numerator - ratio.denominator) >= ratio.denominator:
-            normalized_monzo[0] -= 1
-            ratio = Pitch(p = normalized_monzo).ratio
-            if (ratio.numerator - ratio.denominator) < ratio.denominator:
-                break                
-        return(normalized_monzo)
+        primes = self._vector_primes[:len(monzo)]
+        log2_ratio = sum(exp * math.log2(p) for p, exp in zip(primes, monzo))
+        octaves = math.floor(log2_ratio)
+        normalized_monzo = list(monzo)
+        normalized_monzo[0] -= octaves
+        return normalized_monzo
 
     def _normalized_ratio(self, ratio: fractions.Fraction) -> fractions.Fraction:
         """Return ratio shifted by octaves to lie in [1, 2)."""
