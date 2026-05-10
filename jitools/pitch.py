@@ -1,3 +1,4 @@
+from __future__ import annotations
 import ast
 import csv
 import fractions
@@ -9,13 +10,14 @@ LONG_LIST_OF_PRIMES = prime_list.PrimeList(2**24) #if this value is too low ther
 DEFAULT_MONZO_PRIMES = prime_list.PrimeList(48).primes #all primes up to 47 by default
 
 class Pitch():
+    """A just-intonation pitch defined by a frequency ratio relative to a reference pitch."""
 
     def __init__(
         self,
-        p = (1, 1),
-        rp = "A4",
-        rf = 440.0,
-        precision = 5):
+        p: tuple[int, int] | list[int] | fractions.Fraction = (1, 1),
+        rp: str = "A4",
+        rf: float = 440.0,
+        precision: int = 5) -> None:
         self.reference_pitch = rp
         self.reference_freq = rf
         self.precision = precision
@@ -53,7 +55,7 @@ class Pitch():
         self.normalized_harmonic_distance = self._harmonic_distance(self.normalized_monzo)
         self.pitch_info = self._pitch_info()
 
-    def create_strings_for_print_and_txt(self, variety = "basic"):
+    def create_strings_for_print_and_txt(self, variety: str = "basic") -> list[str]:
         basic_info_strings = [
             "",
             "BASIC INFO",
@@ -94,14 +96,15 @@ class Pitch():
         return(output)
 
     def get_enharmonics(
-        self, 
-        tolerance = 1.95, 
-        limit = 23, 
-        exclude_primes = [], 
-        max_symbols = 2, 
-        max_hd = 30, 
-        max_candidates = 10, 
-        sort_by = "tolerance"):
+        self,
+        tolerance: float = 1.95,
+        limit: int = 23,
+        exclude_primes: list[int] = [],
+        max_symbols: int = 2,
+        max_hd: float = 30,
+        max_candidates: int = 10,
+        sort_by: str = "tolerance") -> list[list]:
+        """Return enharmonically close ratios within tolerance cents from the lookup table."""
 
         possible_enharmonics = []
         fund_offset = self._fund_offset
@@ -234,20 +237,20 @@ class Pitch():
                 x[3] =  self.ratio / x[0]
         return(possible_enharmonics)
         
-    def print_info(self, variety = "basic"):
+    def print_info(self, variety: str = "basic") -> None:
         strings_to_print = self.create_strings_for_print_and_txt(variety = variety)
         for x in strings_to_print:
             print(x)
 
     def print_enharmonics_info(
-        self, 
-        tolerance = 1.95, 
-        limit = 23, 
-        exclude_primes = [], 
-        max_symbols = 2, 
-        max_hd = 30, 
-        max_candidates = 10, 
-        sort_by = "tolerance"):
+        self,
+        tolerance: float = 1.95,
+        limit: int = 23,
+        exclude_primes: list[int] = [],
+        max_symbols: int = 2,
+        max_hd: float = 30,
+        max_candidates: int = 10,
+        sort_by: str = "tolerance") -> None:
         enharmonics_info = self.get_enharmonics(
             tolerance = tolerance, 
             limit = limit, 
@@ -275,11 +278,13 @@ class Pitch():
             for x in enharmonics_strings:
                 print(x)
 
-    def transpose(self, interval):
-        new_ratio = self.ratio * Pitch(p = interval).ratio 
+    def transpose(self, interval: tuple[int, int] | fractions.Fraction) -> None:
+        """Multiply this pitch's ratio by the given interval ratio."""
+        new_ratio = self.ratio * Pitch(p = interval).ratio
         self.update(p = new_ratio)
 
-    def update(self, p = False, rp = False, rf = False, precision = False):
+    def update(self, p: tuple[int, int] | list[int] | fractions.Fraction | bool = False, rp: str | bool = False, rf: float | bool = False, precision: int | bool = False) -> None:
+        """Re-initialize with updated parameters, preserving any omitted values."""
         if not p:
             p = self.monzo
         if not rp:
@@ -291,16 +296,16 @@ class Pitch():
         self.__init__(p = p, rp = rp, rf = rf, precision = precision)
 
     def write_enharmonics_info_to_csv(
-        self, 
-        tolerance = 1.95, 
-        limit = 23, 
-        exclude_primes = [], 
-        max_symbols = 2, 
-        max_hd = 30, 
-        max_candidates = 10, 
-        sort_by = "tolerance",
-        output_directory = False,
-        filename = "enharmonic_candidates.csv"):
+        self,
+        tolerance: float = 1.95,
+        limit: int = 23,
+        exclude_primes: list[int] = [],
+        max_symbols: int = 2,
+        max_hd: float = 30,
+        max_candidates: int = 10,
+        sort_by: str = "tolerance",
+        output_directory: str | bool = False,
+        filename: str = "enharmonic_candidates.csv") -> None:
         enharmonics_info = self.get_enharmonics(
             tolerance = tolerance, 
             limit = limit, 
@@ -371,16 +376,16 @@ class Pitch():
         print("file written to " + path_to_write_file)
 
     def write_enharmonics_info_to_txt(
-        self, 
-        tolerance = 1.95, 
-        limit = 23, 
-        exclude_primes = [], 
-        max_symbols = 2, 
-        max_hd = 30, 
-        max_candidates = 10, 
-        sort_by = "tolerance",
-        output_directory = False,
-        filename = "enharmonic_candidates.txt"):
+        self,
+        tolerance: float = 1.95,
+        limit: int = 23,
+        exclude_primes: list[int] = [],
+        max_symbols: int = 2,
+        max_hd: float = 30,
+        max_candidates: int = 10,
+        sort_by: str = "tolerance",
+        output_directory: str | bool = False,
+        filename: str = "enharmonic_candidates.txt") -> None:
         enharmonics_info = self.get_enharmonics(
             tolerance = tolerance, 
             limit = limit, 
@@ -412,7 +417,7 @@ class Pitch():
                     output.write(x + "\n")
         print("file written to " + path_to_write_file)
 
-    def write_info_to_txt(self, variety = "all", output_directory = False, filename = "pitch_info.txt"):
+    def write_info_to_txt(self, variety: str = "all", output_directory: str | bool = False, filename: str = "pitch_info.txt") -> None:
         strings_to_write = self.create_strings_for_print_and_txt(variety = variety)
         if output_directory == False:
             output_directory = os.getcwd()
@@ -422,11 +427,13 @@ class Pitch():
                 output.write(x + "\n")
         print("file written to " + path_to_write_file)
 
-    def _complement(self):
+    def _complement(self) -> fractions.Fraction:
+        """Return 2 / self.ratio (the octave complement)."""
         complement = 2 / self.ratio
         return(complement)
 
-    def _constituent_primes(self):
+    def _constituent_primes(self) -> list[int]:
+        """Return the primes with non-zero exponents in self.monzo."""
         monzo = self.monzo
         vector_primes = self._vector_primes
         vector_primes = self._lengthen_vector_primes(monzo, vector_primes)
@@ -437,15 +444,16 @@ class Pitch():
         return(constituent_primes)
 
     def _create_strings_for_enharmonics_header(
-        self, 
-        tolerance = 1.95, 
-        limit = 23, 
-        exclude_primes = [], 
-        max_symbols = 2, 
-        max_hd = 30, 
-        max_candidates = 10, 
-        sort_by = "tolerance",
-        num_qualified_candidates = 0):
+        self,
+        tolerance: float = 1.95,
+        limit: int = 23,
+        exclude_primes: list[int] = [],
+        max_symbols: int = 2,
+        max_hd: float = 30,
+        max_candidates: int = 10,
+        sort_by: str = "tolerance",
+        num_qualified_candidates: int = 0) -> list[str]:
+        """Return header strings describing the enharmonic search parameters and result count."""
 
         def excluded_primes_string():
             output = []
@@ -463,7 +471,7 @@ class Pitch():
                     
         return(header_strings)
 
-    def _create_strings_for_enharmonics_info(self, enharmonics_info):
+    def _create_strings_for_enharmonics_info(self, enharmonics_info: list[list]) -> list[str]:
         enharmonics_info_strings = []
         for i, x in enumerate(enharmonics_info):
             count = i + 1
@@ -484,18 +492,20 @@ class Pitch():
             enharmonics_info_strings.append("")
         return(enharmonics_info_strings)
 
-    def _distance_in_cents_from_reference(self):
+    def _distance_in_cents_from_reference(self) -> float:
         distance_in_cents_from_reference = (self.keynum - self.reference_keynum) * 100
         return(distance_in_cents_from_reference)
 
-    def _fraction_to_proportional_ratio_string(self, f):
+    def _fraction_to_proportional_ratio_string(self, f: fractions.Fraction) -> str:
+        """Return a fraction formatted as 'numerator:denominator'."""
         return(str(f.numerator) + ":" + str(f.denominator))
 
-    def _freq(self):
+    def _freq(self) -> float:
         freq = float(self.reference_freq * self.ratio)
         return(freq)
 
-    def _harmonic_distance(self, monzo):
+    def _harmonic_distance(self, monzo: list[int]) -> float:
+        """Return the Tenney harmonic distance: sum of |exp_i| * log2(prime_i)."""
         vector_primes = self._vector_primes
         vector_primes = self._lengthen_vector_primes(monzo, vector_primes)
         harmonic_distance = 0
@@ -506,13 +516,14 @@ class Pitch():
             harmonic_distance += current_hd
         return(harmonic_distance)
 
-    def _keynum(self):
-        keynum = utilities_music.cpsmidi(self.freq, 
+    def _keynum(self) -> float:
+        keynum = utilities_music.cpsmidi(self.freq,
             ref_freq = self.reference_freq, 
             ref_keynum = self.reference_keynum)
         return(keynum) 
 
-    def _letter_name_and_octave_and_cents(self):
+    def _letter_name_and_octave_and_cents(self) -> str:
+        """Return the nearest 12-EDO pitch-class and cent deviation, e.g. 'C4 +14.0'."""
         pitch_class_letter_name_index = math.floor(self.keynum_class)
         pitch_octave = int(divmod(self.keynum, 12)[0] - 1)
         pitch_cents = self.keynum_class % 1
@@ -529,7 +540,8 @@ class Pitch():
             pitch_octave += 1
         return(pitch_class_letter_name + str(pitch_octave) + " " + cents_sign + str(round(pitch_cents * 100, self.precision)))
 
-    def _lengthen_vector_primes(self, monzo, vector_primes):
+    def _lengthen_vector_primes(self, monzo: list[int], vector_primes: list[int]) -> list[int]:
+        """Extend vector_primes until it covers all primes indexed by monzo."""
         if len(monzo) > len(vector_primes):
             x = vector_primes[-1:][0]
             while len(vector_primes) < len(monzo):
@@ -539,7 +551,8 @@ class Pitch():
                     break
         return(vector_primes)
 
-    def _monzo_from_ratio(self):
+    def _monzo_from_ratio(self) -> list[int]:
+        """Return the prime-exponent vector for self.ratio."""
         if self.ratio == fractions.Fraction(1, 1):
             monzo = [0] * len(self._vector_primes)
         else:              
@@ -568,7 +581,8 @@ class Pitch():
         trimmed_monzo = self._trim_monzo(monzo)
         return(trimmed_monzo)
 
-    def _normalized_monzo(self, monzo):
+    def _normalized_monzo(self, monzo: list[int]) -> list[int]:
+        """Return monzo shifted by octaves so its corresponding ratio lies in [1, 2)."""
         ratio = self.ratio
         normalized_monzo = [] + monzo
         while (ratio.numerator - ratio.denominator) < 0:
@@ -583,7 +597,8 @@ class Pitch():
                 break                
         return(normalized_monzo)
 
-    def _normalized_ratio(self, ratio):
+    def _normalized_ratio(self, ratio: fractions.Fraction) -> fractions.Fraction:
+        """Return ratio shifted by octaves to lie in [1, 2)."""
         num = ratio.numerator
         den = ratio.denominator
         condition = num / den < 1
@@ -597,11 +612,12 @@ class Pitch():
         normalized_ratio = fractions.Fraction(num, den)
         return(normalized_ratio)
         
-    def _normalized_harmonic_distance(self):
+    def _normalized_harmonic_distance(self) -> float:
         normalized_harmonic_distance = Pitch(p = self.normalized_monzo)._harmonic_distance()
         return(normalized_harmonic_distance)
 
-    def _notation(self):
+    def _notation(self) -> tuple[str, str]:
+        """Return the HEJI2 notation as (accidental_string, letter_name)."""
         fund_offset = self._fund_offset
         monzo = self.monzo
         vector_primes = self._vector_primes
@@ -714,7 +730,8 @@ class Pitch():
                 accidental_string += x
         return((accidental_string, letter_name))
 
-    def _pitch_info(self):
+    def _pitch_info(self) -> list[list]:
+        """Return [[basic_info], [normalized_info], [reference_info]] attribute lists."""
         basic_info = [
             self.ratio,
             self.monzo,
@@ -737,7 +754,7 @@ class Pitch():
             self.reference_freq]
         return([basic_info, normalized_info, reference_info])
 
-    def _ratio_from_monzo(self):
+    def _ratio_from_monzo(self) -> fractions.Fraction:
         monzo = self.monzo
         vector_primes = self._vector_primes
         vector_primes = self._lengthen_vector_primes(monzo, vector_primes)
@@ -753,7 +770,8 @@ class Pitch():
         ratio = utilities_general.tuple_to_fraction((numerator, denominator))
         return(ratio)
 
-    def _reference_keynum_and_fund_offset_from_pitch_letter_name_and_octave(self):
+    def _reference_keynum_and_fund_offset_from_pitch_letter_name_and_octave(self) -> list[int] | bool:
+        """Parse self.reference_pitch into [keynum, fund_offset], or False if invalid."""
         rp_string = str(self.reference_pitch) + ""
         possible_letter_names = ["F", "C", "G", "D", "A", "E", "B"]
         possible_keynum_classes = [5, 0, 7, 2, 9, 4, 11]
@@ -787,7 +805,8 @@ class Pitch():
                 output = [keynum, fund_offset]
         return(output)
 
-    def _trim_monzo(self, monzo):
+    def _trim_monzo(self, monzo: list[int]) -> list[int]:
+        """Remove trailing zero exponents from monzo."""
         index_of_highest_nonzero_exponent = 0
         for i, x in enumerate(monzo):
             if abs(x) > 0:

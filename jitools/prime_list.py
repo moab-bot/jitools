@@ -1,19 +1,24 @@
+from __future__ import annotations
+import math
 from itertools import compress
 
-#adapted from: https://stackoverflow.com/questions/31843844/how-to-calculate-the-exponents-of-prime-factors-for-a-given-number
-#used to create list of primes, and to factor numbers into primes with exponents
+# adapted from: https://stackoverflow.com/questions/31843844/how-to-calculate-the-exponents-of-prime-factors-for-a-given-number
+# used to create list of primes, and to factor numbers into primes with exponents
 class PrimeList():
+    """Sieve-based prime list with prime factorization and primality testing."""
 
-    def __init__(self, max_val):
+    def __init__(self, max_val: int) -> None:
         self.primes = self._init_primes(max_val)
         self.extend(len(self.primes))
 
-    def check(self,n):
+    def check(self, n: int) -> bool:
+        """Return True if n passes trial-division against the current prime list."""
         n = int(n)
         limit = int(math.sqrt(n))
         return all((n%p for p in self.primes if p<=limit))
 
-    def extend(self,n):
+    def extend(self, n: int) -> None:
+        """Extend the prime list until its largest prime >= n."""
         n = int(n)
         nextnum = self.primes[-1]
         while(self.primes[-1]<n):
@@ -21,7 +26,8 @@ class PrimeList():
             if self.check(nextnum):
                 self.primes.append(nextnum)
 
-    def factors(self, n):
+    def factors(self, n: int) -> list[tuple[int, int]]:
+        """Return the prime factorization of n as sorted (prime, exponent) pairs."""
         n = int(n)
         x = n
         fact = dict()
@@ -37,14 +43,16 @@ class PrimeList():
             return self.factors(n)
         return sorted(fact.items())
 
-    def is_prime(self, n):
+    def is_prime(self, n: int) -> bool:
         n = int(n)
+        if n < 2:
+            return False
         self.extend(int(math.sqrt(n)))
         return self.check(n)
 
-        #taken from https://stackoverflow.com/questions/2068372/fastest-way-to-list-all-primes-below-n/3035188#3035188
-    def _init_primes(self, max_val):
-        """ Returns a list of primes < n for n > 2 """
+    # taken from https://stackoverflow.com/questions/2068372/fastest-way-to-list-all-primes-below-n/3035188#3035188
+    def _init_primes(self, max_val: int) -> list[int]:
+        """Return all primes < max_val using a sieve of Eratosthenes."""
         sieve = bytearray([True]) * (max_val//2+1)
         for i in range(1,int(max_val**0.5)//2+1):
             if sieve[i]:

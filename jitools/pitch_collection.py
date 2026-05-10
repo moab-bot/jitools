@@ -1,3 +1,4 @@
+from __future__ import annotations
 import csv
 import fractions
 import math
@@ -8,14 +9,15 @@ from . import pitch, utilities_general, utilities_music, constants
 
 
 class PitchCollection():
+    """A collection of just-intonation pitches with interval and harmonic analysis."""
 
     def __init__(
         self,
-        pc = [(1, 1), (2, 1)],
-        rp = "A4",
-        rf = 440.0,
-        ti = constants.SABAT_SCHWEINITZ_TUNEABLE_INTERVALS,
-        precision = 5):
+        pc: list[tuple[int, int] | fractions.Fraction] = [(1, 1), (2, 1)],
+        rp: str = "A4",
+        rf: float = 440.0,
+        ti: list[tuple[int, int]] = constants.SABAT_SCHWEINITZ_TUNEABLE_INTERVALS,
+        precision: int = 5) -> None:
         self.pc_raw = []
         [self.pc_raw.append(x) for x in pc if x not in self.pc_raw]
         self.reference_pitch = rp
@@ -73,12 +75,13 @@ class PitchCollection():
             self.harmonic_intersection = self._harmonic_intersection()
             self.harmonic_disjunction = 1 - self.harmonic_intersection
 
-    def print_info(self, variety = "basic"):
+    def print_info(self, variety: str = "basic") -> None:
         strings_to_print = self._create_strings_for_print_and_txt(variety = variety)
         for x in strings_to_print:
             print(x)
 
-    def sort_by(self, sort_by = "ratios"):
+    def sort_by(self, sort_by: str = "ratios") -> None:
+        """Re-sort pitches by a named parameter and update all derived attributes."""
         parameter_index_pairs = [
             ["ratios", 1], 
             ["keynum classes", 5], 
@@ -96,18 +99,20 @@ class PitchCollection():
         if sort_by_index < 0:
             raise ValueError("cannot sort by this parameter")
 
-    def transpose(self, interval):
+    def transpose(self, interval: tuple[int, int] | fractions.Fraction) -> None:
+        """Transpose all pitches by the given interval ratio."""
         transposition_ratio = pitch.Pitch(p = interval).ratio
         transposed_pitches = [x * transposition_ratio for x in self.ratios]
         self.update(pc = transposed_pitches)
 
     def update(
-        self, 
-        pc = False, 
-        rp = False, 
-        rf = False, 
-        ti = False, 
-        precision = False):
+        self,
+        pc: list | bool = False,
+        rp: str | bool = False,
+        rf: float | bool = False,
+        ti: list | bool = False,
+        precision: int | bool = False) -> None:
+        """Re-initialize with updated parameters, preserving any omitted values."""
         if not rp:
             rp = self.reference_pitch
         if not rf:
@@ -125,7 +130,7 @@ class PitchCollection():
             ti = ti, 
             precision = precision)
 
-    def write_info_to_csv(self, output_directory = False, filename = "pitch_collection_info.csv"):
+    def write_info_to_csv(self, output_directory: str | bool = False, filename: str = "pitch_collection_info.csv") -> None:
         final_info = []
         if output_directory == False:
             output_directory = os.getcwd()
@@ -175,7 +180,7 @@ class PitchCollection():
             writer.writerows(final_info)
         print("file written to " + path_to_write_file)
 
-    def write_info_to_txt(self, variety = "all", output_directory = False, filename = "pitch_collection_info.txt"):
+    def write_info_to_txt(self, variety: str = "all", output_directory: str | bool = False, filename: str = "pitch_collection_info.txt") -> None:
         strings_to_write = self._create_strings_for_print_and_txt(variety = variety)
         if output_directory == False:
             output_directory = os.getcwd()
@@ -185,7 +190,7 @@ class PitchCollection():
                 output.write(x + "\n")
         print("file written to " + path_to_write_file)
 
-    def _create_strings_for_print_and_txt(self, variety = "basic"):
+    def _create_strings_for_print_and_txt(self, variety: str = "basic") -> list[str]:
         basic_info_strings = [
             "",
             "BASIC INFO",
@@ -295,7 +300,8 @@ class PitchCollection():
             output = basic_info_strings + quantitative_info_strings[1:] + analytic_info_strings[1:] + normalized_info_strings[1:] + inversion_info_strings[1:] + resultant_tones_info_strings[1:] + reference_info_strings[1:]
         return(output)
 
-    def _harmonic_intersection(self):
+    def _harmonic_intersection(self) -> fractions.Fraction:
+        """Return the harmonic intersection via inclusion-exclusion over the harmonic series."""
         harmonics = list(set(self.harmonics))
         harmonics_length = len(harmonics)
         harmonics = [ int(h / reduce(math.gcd, harmonics)) for h in harmonics ]
@@ -310,13 +316,15 @@ class PitchCollection():
                 output = output + fractions.Fraction(nv[0], nv[1])
         return(output)
 
-    def _harmonics(self, ratios):
+    def _harmonics(self, ratios: list[fractions.Fraction]) -> list[int]:
+        """Return the integer harmonic series representation of the given ratios."""
         ratio_denominators = [x.denominator for x in ratios]
         ratio_multiplier = reduce(math.lcm, ratio_denominators)
         harmonics = [int(x * ratio_multiplier) for x in ratios]
         return(harmonics)
 
-    def _harmonics_to_proportional_ratio_string(self, harmonics):
+    def _harmonics_to_proportional_ratio_string(self, harmonics: list[int]) -> str:
+        """Return harmonics formatted as 'a:b:c:...'."""
         output = ""
         for i, h in enumerate(harmonics):
             output = output + str(h)
@@ -324,11 +332,12 @@ class PitchCollection():
                 output = output + ":"
         return(output)
 
-    def _hd_sum(self):
+    def _hd_sum(self) -> float:
         hd_sum = sum(self.harmonic_distances)
         return(hd_sum)
 
-    def _info_by_parameter(self):
+    def _info_by_parameter(self) -> list[list]:
+        """Transpose self.info_by_pitch and populate all per-parameter attribute lists."""
         info_by_parameter = utilities_general.flop(self.info_by_pitch)
         self.ratios = info_by_parameter[1]
         self.monzos = info_by_parameter[2]
@@ -346,7 +355,8 @@ class PitchCollection():
         self.normalized_harmonic_distances = info_by_parameter[14]
         return(info_by_parameter)
 
-    def _info_by_pitch(self, pc):
+    def _info_by_pitch(self, pc: list) -> list[list]:
+        """Return a list of attribute vectors, one per pitch."""
         ratios = []
         pc_processed = []
         output = []
@@ -378,7 +388,8 @@ class PitchCollection():
             output.append([h] + p)
         return(output)
 
-    def _intervals_and_resultant_tones(self):
+    def _intervals_and_resultant_tones(self) -> list:
+        """Return intervals, tuneable/non-tuneable splits, difference tones, and summation tones."""
         data = []
         for i, y in enumerate([lambda x: tuple(x), lambda x: x[0] / x[1], lambda x: x[0] - x[1], lambda x: x[0] + x[1]]):
             raw_pitch_info = [ y(sorted(x, reverse=True)) for x in list(combinations(self.ratios[::-1], 2)) ]
@@ -443,11 +454,13 @@ class PitchCollection():
                 data.append([tuneable_resultant_tones, tuneable_pitch_pairs, non_tuneable_resultant_tones, non_tuneable_pitch_pairs])
         return(data[1:])
 
-    def _intervals_sequential(self):
+    def _intervals_sequential(self) -> list[fractions.Fraction]:
+        """Return the ascending interval between each consecutive pair of sorted pitches."""
         intervals_sequential = [ self.ratios[n] / self.ratios[n - 1] for n in range(1,len(self.ratios)) ]
         return(intervals_sequential)
 
-    def _inversion(self):
+    def _inversion(self) -> list[fractions.Fraction]:
+        """Return the melodic inversion, transposed to start on the lowest pitch."""
         ratios = self.ratios
         inverted_intervals = [ ratios[n - 1] / ratios[n] for n in range(1,len(ratios))]
         inversion = [ratios[-1]]
@@ -458,22 +471,24 @@ class PitchCollection():
         transposed_inversion = [x * correction for x in inversion]
         return(sorted(transposed_inversion))
 
-    def _is_tuneable(self, ratio):
+    def _is_tuneable(self, ratio: fractions.Fraction) -> bool:
         is_tuneable = False
         if ratio in self.allowed_tuneable_intervals:
             is_tuneable = True
         return(is_tuneable) 
 
-    def _least_common_partial(self):
+    def _least_common_partial(self) -> list:
+        """Return [least_common_partial_integer, least_common_partial_freq_in_hz]."""
         least_common_partial = utilities_general.lcm(self.harmonics)
         least_common_partial_freq = least_common_partial * self.periodicity_pitch
         return([least_common_partial, least_common_partial_freq])
 
-    def _pc_plus_resultant_tones(self):
+    def _pc_plus_resultant_tones(self) -> list[fractions.Fraction]:
         composite_pc = list(dict.fromkeys(sorted(self.ratios + self.difference_tones + self.summation_tones)))
         return(composite_pc)
 
-    def _periodicity_pitch(self):
+    def _periodicity_pitch(self) -> float:
+        """Return the fundamental frequency implied by the harmonic series of the collection."""
         lowest_harmonic = min(self.harmonics)
         lowest_freq = min(self.freqs)
         periodicity_pitch = lowest_freq / lowest_harmonic
