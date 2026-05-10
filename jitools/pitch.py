@@ -525,6 +525,8 @@ class Pitch():
         pitch_class_letter_name_index = int(pitch_class_letter_name_index) % 12
         pitch_class_letter_name_strings = ["C", "C#/Db", "D", "D#/Eb", "E", "F", "F#/Gb", "G", "G#/Ab", "A", "A#/Bb", "B"]
         pitch_class_letter_name = pitch_class_letter_name_strings[pitch_class_letter_name_index]
+        if pitch_class_letter_name_index == 0:
+            pitch_octave += 1
         return(pitch_class_letter_name + str(pitch_octave) + " " + cents_sign + str(round(pitch_cents * 100, self.precision)))
 
     def _lengthen_vector_primes(self, monzo, vector_primes):
