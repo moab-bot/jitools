@@ -29,14 +29,14 @@ def lcm(list_of_integers: list[int]) -> int:
     output = reduce(lambda x, y: x * y // math.gcd(x, y), list_of_integers)
     return(output)
 
-def convert_data_to_readable_string(d, precision: int = 5, prefix: str | bool = False, suffix: str | bool = False) -> str:
+def convert_data_to_readable_string(d: int | float | Fraction, precision: int = 5, prefix: str | None = None, suffix: str | None = None) -> str:
     """Format d as a string, rounding floats to precision decimal places."""
     if isinstance(d, float):
         formatted_string = str(round(d, precision))
     else:
         formatted_string = str(d)
-    if prefix:
+    if prefix is not None:
         formatted_string = prefix + formatted_string
-    if suffix:
+    if suffix is not None:
         formatted_string = formatted_string + suffix
     return(formatted_string)

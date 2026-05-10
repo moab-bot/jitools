@@ -16,8 +16,10 @@ class PitchCollection():
         pc: list[tuple[int, int] | fractions.Fraction] = [(1, 1), (2, 1)],
         rp: str = "A4",
         rf: float = 440.0,
-        ti: list[tuple[int, int]] = constants.SABAT_SCHWEINITZ_TUNEABLE_INTERVALS,
+        ti: list[tuple[int, int]] | None = None,
         precision: int = 5) -> None:
+        if ti is None:
+            ti = constants.SABAT_SCHWEINITZ_TUNEABLE_INTERVALS
         self.pc_raw = []
         [self.pc_raw.append(x) for x in pc if x not in self.pc_raw]
         self.reference_pitch = rp
@@ -107,21 +109,21 @@ class PitchCollection():
 
     def update(
         self,
-        pc: list | bool = False,
-        rp: str | bool = False,
-        rf: float | bool = False,
-        ti: list | bool = False,
-        precision: int | bool = False) -> None:
+        pc: list | None = None,
+        rp: str | None = None,
+        rf: float | None = None,
+        ti: list | None = None,
+        precision: int | None = None) -> None:
         """Re-initialize with updated parameters, preserving any omitted values."""
-        if not rp:
+        if rp is None:
             rp = self.reference_pitch
-        if not rf:
+        if rf is None:
             rf = self.reference_freq
-        if not pc:
+        if pc is None:
             pc = self.pc_raw
-        if not ti:
+        if ti is None:
             ti = self.allowed_tuneable_intervals_as_tuples
-        if not precision:
+        if precision is None:
             precision = self.precision
         self.__init__(
             pc = pc, 
@@ -130,9 +132,9 @@ class PitchCollection():
             ti = ti, 
             precision = precision)
 
-    def write_info_to_csv(self, output_directory: str | bool = False, filename: str = "pitch_collection_info.csv") -> None:
+    def write_info_to_csv(self, output_directory: str | None = None, filename: str = "pitch_collection_info.csv") -> None:
         final_info = []
-        if output_directory == False:
+        if output_directory is None:
             output_directory = os.getcwd()
         path_to_write_file = output_directory + "/" + filename
         data_types = [
@@ -180,9 +182,9 @@ class PitchCollection():
             writer.writerows(final_info)
         print("file written to " + path_to_write_file)
 
-    def write_info_to_txt(self, variety: str = "all", output_directory: str | bool = False, filename: str = "pitch_collection_info.txt") -> None:
+    def write_info_to_txt(self, variety: str = "all", output_directory: str | None = None, filename: str = "pitch_collection_info.txt") -> None:
         strings_to_write = self._create_strings_for_print_and_txt(variety = variety)
-        if output_directory == False:
+        if output_directory is None:
             output_directory = os.getcwd()
         path_to_write_file = output_directory + "/" + filename
         with open(path_to_write_file, "w") as output:
@@ -362,9 +364,10 @@ class PitchCollection():
         output = []
         for p in pc:
             pci = pitch.Pitch(p = p,
-                rp = self.reference_pitch, 
-                rf = self.reference_freq)
-            if isinstance(pci.rk_and_fo, str) == False:
+                rp = self.reference_pitch,
+                rf = self.reference_freq,
+                precision = self.precision)
+            if isinstance(pci.rk_and_fo, list):
                 ratios.append(pci.ratio)
                 pc_processed.append([pci.ratio, 
                     pci.monzo, 
@@ -388,7 +391,7 @@ class PitchCollection():
             output.append([h] + p)
         return(output)
 
-    def _intervals_and_resultant_tones(self) -> list:
+    def _intervals_and_resultant_tones(self) -> list[list]:
         """Return intervals, tuneable/non-tuneable splits, difference tones, and summation tones."""
         data = []
         for i, y in enumerate([lambda x: tuple(x), lambda x: x[0] / x[1], lambda x: x[0] - x[1], lambda x: x[0] + x[1]]):
@@ -448,7 +451,7 @@ class PitchCollection():
                 for ntct in non_tuneable_resultant_tones:
                     ntpp = []
                     for pp in pitch_pairs:
-                        if ntct == pp [1] and self._is_tuneable(pp[0] / pp[1]) == False:
+                        if ntct == pp[1] and not self._is_tuneable(pp[0] / pp[1]):
                             ntpp.append(pp)
                     non_tuneable_pitch_pairs.append(ntpp)
                 data.append([tuneable_resultant_tones, tuneable_pitch_pairs, non_tuneable_resultant_tones, non_tuneable_pitch_pairs])
@@ -472,12 +475,9 @@ class PitchCollection():
         return(sorted(transposed_inversion))
 
     def _is_tuneable(self, ratio: fractions.Fraction) -> bool:
-        is_tuneable = False
-        if ratio in self.allowed_tuneable_intervals:
-            is_tuneable = True
-        return(is_tuneable) 
+        return ratio in self.allowed_tuneable_intervals
 
-    def _least_common_partial(self) -> list:
+    def _least_common_partial(self) -> list[int | float]:
         """Return [least_common_partial_integer, least_common_partial_freq_in_hz]."""
         least_common_partial = utilities_general.lcm(self.harmonics)
         least_common_partial_freq = least_common_partial * self.periodicity_pitch

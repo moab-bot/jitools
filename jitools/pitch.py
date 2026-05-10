@@ -99,13 +99,14 @@ class Pitch():
         self,
         tolerance: float = 1.95,
         limit: int = 23,
-        exclude_primes: list[int] = [],
+        exclude_primes: list[int] | None = None,
         max_symbols: int = 2,
         max_hd: float = 30,
         max_candidates: int = 10,
         sort_by: str = "tolerance") -> list[list]:
         """Return enharmonically close ratios within tolerance cents from the lookup table."""
-
+        if exclude_primes is None:
+            exclude_primes = []
         possible_enharmonics = []
         fund_offset = self._fund_offset
         vector_primes = self._vector_primes
@@ -246,7 +247,7 @@ class Pitch():
         self,
         tolerance: float = 1.95,
         limit: int = 23,
-        exclude_primes: list[int] = [],
+        exclude_primes: list[int] | None = None,
         max_symbols: int = 2,
         max_hd: float = 30,
         max_candidates: int = 10,
@@ -283,15 +284,15 @@ class Pitch():
         new_ratio = self.ratio * Pitch(p = interval).ratio
         self.update(p = new_ratio)
 
-    def update(self, p: tuple[int, int] | list[int] | fractions.Fraction | bool = False, rp: str | bool = False, rf: float | bool = False, precision: int | bool = False) -> None:
+    def update(self, p: tuple[int, int] | list[int] | fractions.Fraction | None = None, rp: str | None = None, rf: float | None = None, precision: int | None = None) -> None:
         """Re-initialize with updated parameters, preserving any omitted values."""
-        if not p:
+        if p is None:
             p = self.monzo
-        if not rp:
+        if rp is None:
             rp = self.reference_pitch
-        if not rf:
+        if rf is None:
             rf = self.reference_freq
-        if not precision:
+        if precision is None:
             precision = self.precision
         self.__init__(p = p, rp = rp, rf = rf, precision = precision)
 
@@ -299,12 +300,12 @@ class Pitch():
         self,
         tolerance: float = 1.95,
         limit: int = 23,
-        exclude_primes: list[int] = [],
+        exclude_primes: list[int] | None = None,
         max_symbols: int = 2,
         max_hd: float = 30,
         max_candidates: int = 10,
         sort_by: str = "tolerance",
-        output_directory: str | bool = False,
+        output_directory: str | None = None,
         filename: str = "enharmonic_candidates.csv") -> None:
         enharmonics_info = self.get_enharmonics(
             tolerance = tolerance, 
@@ -329,7 +330,7 @@ class Pitch():
             formatted_header.append([" ", x])
         formatted_header.append(" ")
         final_info = formatted_header
-        if output_directory == False:
+        if output_directory is None:
             output_directory = os.getcwd()
         path_to_write_file = output_directory + "/" + filename
         if num_enharmonics > 0:
@@ -379,12 +380,12 @@ class Pitch():
         self,
         tolerance: float = 1.95,
         limit: int = 23,
-        exclude_primes: list[int] = [],
+        exclude_primes: list[int] | None = None,
         max_symbols: int = 2,
         max_hd: float = 30,
         max_candidates: int = 10,
         sort_by: str = "tolerance",
-        output_directory: str | bool = False,
+        output_directory: str | None = None,
         filename: str = "enharmonic_candidates.txt") -> None:
         enharmonics_info = self.get_enharmonics(
             tolerance = tolerance, 
@@ -404,7 +405,7 @@ class Pitch():
             max_candidates = max_candidates,
             sort_by = sort_by,
             num_qualified_candidates = num_enharmonics)
-        if output_directory == False:
+        if output_directory is None:
             output_directory = os.getcwd()
         path_to_write_file = output_directory + "/" + filename
         with open(path_to_write_file, "w") as output:
@@ -417,9 +418,9 @@ class Pitch():
                     output.write(x + "\n")
         print("file written to " + path_to_write_file)
 
-    def write_info_to_txt(self, variety: str = "all", output_directory: str | bool = False, filename: str = "pitch_info.txt") -> None:
+    def write_info_to_txt(self, variety: str = "all", output_directory: str | None = None, filename: str = "pitch_info.txt") -> None:
         strings_to_write = self.create_strings_for_print_and_txt(variety = variety)
-        if output_directory == False:
+        if output_directory is None:
             output_directory = os.getcwd()
         path_to_write_file = output_directory + "/" + filename
         with open(path_to_write_file, "w") as output:
@@ -447,14 +448,15 @@ class Pitch():
         self,
         tolerance: float = 1.95,
         limit: int = 23,
-        exclude_primes: list[int] = [],
+        exclude_primes: list[int] | None = None,
         max_symbols: int = 2,
         max_hd: float = 30,
         max_candidates: int = 10,
         sort_by: str = "tolerance",
         num_qualified_candidates: int = 0) -> list[str]:
         """Return header strings describing the enharmonic search parameters and result count."""
-
+        if exclude_primes is None:
+            exclude_primes = []
         def excluded_primes_string():
             output = []
             if len(exclude_primes) > 0:
@@ -612,10 +614,6 @@ class Pitch():
         normalized_ratio = fractions.Fraction(num, den)
         return(normalized_ratio)
         
-    def _normalized_harmonic_distance(self) -> float:
-        normalized_harmonic_distance = Pitch(p = self.normalized_monzo)._harmonic_distance()
-        return(normalized_harmonic_distance)
-
     def _notation(self) -> tuple[str, str]:
         """Return the HEJI2 notation as (accidental_string, letter_name)."""
         fund_offset = self._fund_offset
@@ -770,21 +768,21 @@ class Pitch():
         ratio = utilities_general.tuple_to_fraction((numerator, denominator))
         return(ratio)
 
-    def _reference_keynum_and_fund_offset_from_pitch_letter_name_and_octave(self) -> list[int] | bool:
-        """Parse self.reference_pitch into [keynum, fund_offset], or False if invalid."""
+    def _reference_keynum_and_fund_offset_from_pitch_letter_name_and_octave(self) -> list[int] | None:
+        """Parse self.reference_pitch into [keynum, fund_offset], or None if invalid."""
         rp_string = str(self.reference_pitch) + ""
         possible_letter_names = ["F", "C", "G", "D", "A", "E", "B"]
         possible_keynum_classes = [5, 0, 7, 2, 9, 4, 11]
-        letter_name = False
-        octave_number = False
-        output = False
+        letter_name = None
+        octave_number = None
+        output = None
         fund_offset = 0
         if rp_string[0] in possible_letter_names:
             letter_name = rp_string[0]
             keynum_class = possible_keynum_classes[possible_letter_names.index(letter_name)]
             fund_offset = possible_letter_names.index(letter_name) - 3
             rp_string = rp_string[1:]
-        if letter_name is not False and len(rp_string) > 0:
+        if letter_name is not None and len(rp_string) > 0:
             if rp_string[-1].isdigit():
                 octave_number = int(rp_string[-1])
                 if len(rp_string) > 1 and rp_string[-2] == "-":
