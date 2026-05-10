@@ -7,22 +7,22 @@ def tuple_to_fraction(t: tuple[int, int]) -> Fraction:
     f = Fraction(t[0], t[1])
     return(f)
 
-def tuples_to_fractions(l: list[tuple[int, int]]) -> list[Fraction]:
-    output = [tuple_to_fraction(x) for x in l]
+def tuples_to_fractions(tuples: list[tuple[int, int]]) -> list[Fraction]:
+    output = [tuple_to_fraction(x) for x in tuples]
     return(output)
 
 def flop(lists: list[list]) -> list[list]:
     """Transpose a list-of-lists (rows→columns), truncating to the shortest row."""
     final = []
     lens = []
-    for l in lists:
-        lens.append(len(l))
+    for row in lists:
+        lens.append(len(row))
     leng = min(lens)
     for i in range(leng):
-        k = []
-        for l in lists:
-          k.append(l[i])
-        final.append(k)
+        col = []
+        for row in lists:
+            col.append(row[i])
+        final.append(col)
     return(final)
 
 def lcm(list_of_integers: list[int]) -> int:
