@@ -18,6 +18,15 @@ class PitchCollection():
         rf: float = 440.0,
         ti: list[tuple[int, int]] | None = None,
         precision: int = 5) -> None:
+        """
+        Args:
+            pc: List of pitches as (numerator, denominator) tuples or Fractions.
+            rp: Letter-name of the reference pitch (1/1), e.g. "A4" or "C4". Defaults to "A4".
+            rf: Frequency of the reference pitch in Hz. Defaults to 440.0.
+            ti: Tuneable intervals as a list of (numerator, denominator) tuples.
+                Defaults to the Sabat-Schweinitz tuneable interval list.
+            precision: Decimal places used for floating-point display. Defaults to 5.
+        """
         if ti is None:
             ti = constants.SABAT_SCHWEINITZ_TUNEABLE_INTERVALS
         self.pc_raw = []
@@ -27,6 +36,7 @@ class PitchCollection():
         self.precision = precision
         self.allowed_tuneable_intervals_as_tuples = ti
         self.allowed_tuneable_intervals = utilities_general.tuples_to_fractions(self.allowed_tuneable_intervals_as_tuples)
+        self._tuneable_set = set(self.allowed_tuneable_intervals)
         self.info_by_pitch = self._info_by_pitch(self.pc_raw)
         if isinstance(self.info_by_pitch, list):
             self.sort_by(sort_by="ratios")
@@ -75,9 +85,18 @@ class PitchCollection():
             self.hd_sum = self._hd_sum()
             self.hd_avg = self.hd_sum / len(self.pc_raw)
             self.harmonic_intersection = self._harmonic_intersection()
-            self.harmonic_disjunction = 1 - self.harmonic_intersection
+            self.harmonic_disjunction = (
+                None if self.harmonic_intersection is None
+                else 1 - self.harmonic_intersection
+            )
 
     def print_info(self, variety: str = "basic") -> None:
+        """Print a formatted report of collection attributes.
+
+        Args:
+            variety: One of "basic", "quantitative", "analytic", "normalized",
+                     "inversion", "resultants", "reference", or "all".
+        """
         strings_to_print = self._create_strings_for_print_and_txt(variety = variety)
         for x in strings_to_print:
             print(x)
@@ -236,8 +255,18 @@ class PitchCollection():
             "constituent primes: " + str(self.constituent_primes),
             "harmonic distance sum: " + str(round(self.hd_sum, self.precision)),
             "average harmonic distance: " + str(round(self.hd_avg, self.precision)),
-            "harmonic intersection: " + utilities_general.convert_data_to_readable_string(self.harmonic_intersection) + " (" + str(round(float(self.harmonic_intersection), self.precision)) + ")",
-            "harmonic disjunction: " + utilities_general.convert_data_to_readable_string(self.harmonic_disjunction) + " (" + str(round(float(self.harmonic_disjunction), self.precision)) + ")",
+            "harmonic intersection: " + (
+                "N/A (more than 20 independent harmonics)"
+                if self.harmonic_intersection is None else
+                utilities_general.convert_data_to_readable_string(self.harmonic_intersection)
+                + " (" + str(round(float(self.harmonic_intersection), self.precision)) + ")"
+            ),
+            "harmonic disjunction: " + (
+                "N/A (more than 20 independent harmonics)"
+                if self.harmonic_disjunction is None else
+                utilities_general.convert_data_to_readable_string(self.harmonic_disjunction)
+                + " (" + str(round(float(self.harmonic_disjunction), self.precision)) + ")"
+            ),
             ""]
 
         if variety == "normalized" or variety == "all":
@@ -302,21 +331,27 @@ class PitchCollection():
             output = basic_info_strings + quantitative_info_strings[1:] + analytic_info_strings[1:] + normalized_info_strings[1:] + inversion_info_strings[1:] + resultant_tones_info_strings[1:] + reference_info_strings[1:]
         return(output)
 
-    def _harmonic_intersection(self) -> fractions.Fraction:
-        """Return the harmonic intersection via inclusion-exclusion over the harmonic series."""
+    def _harmonic_intersection(self) -> fractions.Fraction | None:
+        """Return the harmonic intersection via inclusion-exclusion over the harmonic series.
+
+        Applies an antichain filter first: if harmonic h_j is a multiple of h_i,
+        its contribution is subsumed by h_i and it can be removed without changing
+        the result. Returns None if the effective harmonic count after filtering
+        exceeds 20, since 2^n inclusion-exclusion would be impractical.
+        """
         harmonics = list(set(self.harmonics))
-        harmonics_length = len(harmonics)
-        harmonics = [ int(h / reduce(math.gcd, harmonics)) for h in harmonics ]
+        harmonics = [int(h / reduce(math.gcd, harmonics)) for h in harmonics]
+        # Remove any h that is a strict multiple of another h in the list
+        harmonics = [h for h in harmonics
+                     if not any(h % other == 0 and h != other for other in harmonics)]
+        if len(harmonics) > 20:
+            return None
         output = fractions.Fraction(0, 1)
-        for i in range(1, harmonics_length + 1):
-            combos = combinations(harmonics, i)
-            if i % 2 == 0:
-                new_values = [ [-1, utilities_general.lcm(c)] for c in combos ]
-            else:
-                new_values = [ [1, utilities_general.lcm(c)] for c in combos ]
-            for nv in new_values:
-                output = output + fractions.Fraction(nv[0], nv[1])
-        return(output)
+        for i in range(1, len(harmonics) + 1):
+            sign = 1 if i % 2 != 0 else -1
+            for c in combinations(harmonics, i):
+                output += fractions.Fraction(sign, utilities_general.lcm(c))
+        return output
 
     def _harmonics(self, ratios: list[fractions.Fraction]) -> list[int]:
         """Return the integer harmonic series representation of the given ratios."""
@@ -393,69 +428,72 @@ class PitchCollection():
 
     def _intervals_and_resultant_tones(self) -> list[list]:
         """Return intervals, tuneable/non-tuneable splits, difference tones, and summation tones."""
-        data = []
-        for i, y in enumerate([lambda x: tuple(x), lambda x: x[0] / x[1], lambda x: x[0] - x[1], lambda x: x[0] + x[1]]):
-            raw_pitch_info = [ y(sorted(x, reverse=True)) for x in list(combinations(self.ratios[::-1], 2)) ]
-            data.append(sorted(list(dict.fromkeys(raw_pitch_info))))
-            intervals = []
-            if i == 1:
-                pitch_pairs = data[0]
-                intervals = data[1]
-            elif i > 1:
-                pitch_pairs = list(product(self.ratios, list(dict.fromkeys(raw_pitch_info))))
-                intervals = [x[0] / x[1] for x in pitch_pairs]
-            tuneable_intervals = []
-            tuneable_resultant_tones = []
-            tuneable_pitch_pairs = []
-            non_tuneable_intervals = []
-            non_tuneable_resultant_tones = []
-            non_tuneable_pitch_pairs = []
-            for y in intervals:
-                if self._is_tuneable(y):
-                    tuneable_intervals.append(y)
-                    tpp = []
-                    for pp in pitch_pairs:
-                        if pp[0] / pp[1] == y:
-                            if i == 1:
-                                tpp.append(pp)
-                            else:
-                                tuneable_resultant_tones.append(pp[1])
-                                tuneable_resultant_tones = sorted(list(dict.fromkeys(tuneable_resultant_tones)))
-                            if i == 1:
-                                tuneable_pitch_pairs.append(tpp)
-                else:
-                    non_tuneable_intervals.append(y)
-                    ntpp = []
-                    for pp in pitch_pairs:
-                        if pp[0] / pp[1] == y:
-                            if i == 1:
-                                ntpp.append(pp)
-                                non_tuneable_resultant_tones.append(pp[1])
-                            else:
-                                non_tuneable_resultant_tones.append(pp[1])
-                                non_tuneable_resultant_tones = sorted(list(dict.fromkeys(non_tuneable_resultant_tones)))
-                            if i == 1:
-                                non_tuneable_pitch_pairs.append(ntpp)
-            if i == 1:
-                data.append([tuneable_intervals, tuneable_pitch_pairs, non_tuneable_intervals, non_tuneable_pitch_pairs])
-            elif i > 1:
-                for x in non_tuneable_resultant_tones:
-                    if x in tuneable_resultant_tones:
-                        non_tuneable_resultant_tones.remove(x)
-                for tct in tuneable_resultant_tones:
-                    tpp = []
-                    for pp in pitch_pairs:
-                        if tct == pp[1] and self._is_tuneable(pp[0] / pp[1]):
-                            tpp.append(pp)
-                    tuneable_pitch_pairs.append(tpp)
-                for ntct in non_tuneable_resultant_tones:
-                    ntpp = []
-                    for pp in pitch_pairs:
-                        if ntct == pp[1] and not self._is_tuneable(pp[0] / pp[1]):
-                            ntpp.append(pp)
-                    non_tuneable_pitch_pairs.append(ntpp)
-                data.append([tuneable_resultant_tones, tuneable_pitch_pairs, non_tuneable_resultant_tones, non_tuneable_pitch_pairs])
-        return(data[1:])
+        pairs = sorted(dict.fromkeys(
+            tuple(sorted(x, reverse=True)) for x in combinations(self.ratios[::-1], 2)
+        ))
+
+        # Build interval→pairs index in one O(n²) pass instead of nested O(n⁴) loops
+        pairs_by_interval = {}
+        for pp in pairs:
+            r = pp[0] / pp[1]
+            if r not in pairs_by_interval:
+                pairs_by_interval[r] = []
+            pairs_by_interval[r].append(pp)
+
+        unique_intervals = sorted(pairs_by_interval)
+        tuneable_intervals, tuneable_pitch_pairs = [], []
+        non_tuneable_intervals, non_tuneable_pitch_pairs = [], []
+        for interval in unique_intervals:
+            if self._is_tuneable(interval):
+                tuneable_intervals.append(interval)
+                tuneable_pitch_pairs.append(pairs_by_interval[interval])
+            else:
+                non_tuneable_intervals.append(interval)
+                non_tuneable_pitch_pairs.append(pairs_by_interval[interval])
+
+        interval_splits = [tuneable_intervals, tuneable_pitch_pairs,
+                           non_tuneable_intervals, non_tuneable_pitch_pairs]
+
+        # Difference and summation tones — build tone→pairs index in one pass
+        resultant_results = []
+        for compute_tone in (lambda a, b: a - b, lambda a, b: a + b):
+            unique_tones = sorted(dict.fromkeys(
+                compute_tone(pp[0], pp[1]) for pp in pairs
+            ))
+
+            pairs_by_tone = {t: [] for t in unique_tones}
+            tuneable_tone_set = set()
+            for pitch_ratio in self.ratios:
+                for tone in unique_tones:
+                    pairs_by_tone[tone].append((pitch_ratio, tone))
+                    if self._is_tuneable(pitch_ratio / tone):
+                        tuneable_tone_set.add(tone)
+
+            tuneable_tones = sorted(tuneable_tone_set)
+            non_tuneable_tones = sorted(t for t in unique_tones if t not in tuneable_tone_set)
+
+            tuneable_pp = [
+                [pp for pp in pairs_by_tone[t] if self._is_tuneable(pp[0] / pp[1])]
+                for t in tuneable_tones
+            ]
+            non_tuneable_pp = [
+                [pp for pp in pairs_by_tone[t] if not self._is_tuneable(pp[0] / pp[1])]
+                for t in non_tuneable_tones
+            ]
+            resultant_results.append((unique_tones, tuneable_tones, tuneable_pp,
+                                      non_tuneable_tones, non_tuneable_pp))
+
+        diffs,  t_diffs,  t_diff_pp,  nt_diffs,  nt_diff_pp  = resultant_results[0]
+        sums,   t_sums,   t_sum_pp,   nt_sums,   nt_sum_pp   = resultant_results[1]
+
+        return [
+            unique_intervals,
+            interval_splits,
+            diffs,
+            [t_diffs, t_diff_pp, nt_diffs, nt_diff_pp],
+            sums,
+            [t_sums, t_sum_pp, nt_sums, nt_sum_pp],
+        ]
 
     def _intervals_sequential(self) -> list[fractions.Fraction]:
         """Return the ascending interval between each consecutive pair of sorted pitches."""
@@ -475,7 +513,7 @@ class PitchCollection():
         return(sorted(transposed_inversion))
 
     def _is_tuneable(self, ratio: fractions.Fraction) -> bool:
-        return ratio in self.allowed_tuneable_intervals
+        return ratio in self._tuneable_set
 
     def _least_common_partial(self) -> list[int | float]:
         """Return [least_common_partial_integer, least_common_partial_freq_in_hz]."""

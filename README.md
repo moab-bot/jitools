@@ -6,7 +6,7 @@
 
 **jitools** shares some functionalities with **[Thomas Nicholson](https://thomasnicholson.ca/)**'s JavaScript-based online resource, the **[Plainsound Harmonic Space Calculator](https://www.plainsound.org/HEJI/)**.
 
-**jitools** works on Python 3.9.4+.
+**jitools** works on Python 3.10+.
 
 ## Just Intonation
 

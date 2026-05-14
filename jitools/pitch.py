@@ -18,6 +18,14 @@ class Pitch():
         rp: str = "A4",
         rf: float = 440.0,
         precision: int = 5) -> None:
+        """
+        Args:
+            p: Pitch ratio as a (numerator, denominator) tuple, a Fraction, or a monzo
+               list of prime exponents [exp2, exp3, exp5, ...]. Defaults to (1, 1).
+            rp: Letter-name of the reference pitch (1/1), e.g. "A4" or "C4". Defaults to "A4".
+            rf: Frequency of the reference pitch in Hz. Defaults to 440.0.
+            precision: Decimal places used for floating-point display. Defaults to 5.
+        """
         self.reference_pitch = rp
         self.reference_freq = rf
         self.precision = precision
@@ -105,7 +113,22 @@ class Pitch():
         max_candidates: int = 10,
         sort_by: str = "tolerance",
         lookup_table_path: str | None = None) -> list[list]:
-        """Return enharmonically close ratios within tolerance cents from the lookup table."""
+        """Return ratios enharmonically close to this pitch.
+
+        Args:
+            tolerance: Maximum distance in cents from this pitch (default 1.95).
+            limit: Maximum prime factor allowed in candidates (default 23).
+            exclude_primes: Prime factors to exclude from candidates (default []).
+            max_symbols: Maximum number of HEJI2 accidental symbols (default 2).
+            max_hd: Maximum harmonic distance for candidates (default 30).
+            max_candidates: Maximum number of results to return (default 10).
+            sort_by: Order results by "tolerance" or "harmonic distance" (default "tolerance").
+            lookup_table_path: Path to a custom CSV lookup table. Uses the bundled
+                table if None.
+
+        Returns:
+            List of [ratio, cent_delta, harmonic_distance, enharmonic_interval] entries.
+        """
         if exclude_primes is None:
             exclude_primes = []
         possible_enharmonics = []
@@ -242,6 +265,11 @@ class Pitch():
         return(possible_enharmonics)
         
     def print_info(self, variety: str = "basic") -> None:
+        """Print a formatted report of pitch attributes.
+
+        Args:
+            variety: One of "basic", "normalized", "reference", or "all".
+        """
         strings_to_print = self.create_strings_for_print_and_txt(variety = variety)
         for x in strings_to_print:
             print(x)
@@ -256,6 +284,7 @@ class Pitch():
         max_candidates: int = 10,
         sort_by: str = "tolerance",
         lookup_table_path: str | None = None) -> None:
+        """Print a formatted enharmonic search report. See get_enharmonics() for parameter descriptions."""
         enharmonics_info = self.get_enharmonics(
             tolerance = tolerance,
             limit = limit,
@@ -313,6 +342,14 @@ class Pitch():
         output_directory: str | None = None,
         filename: str = "enharmonic_candidates.csv",
         lookup_table_path: str | None = None) -> None:
+        """Write an enharmonic search report to a CSV file.
+
+        See get_enharmonics() for search parameter descriptions.
+
+        Args:
+            output_directory: Directory to write to. Defaults to the current working directory.
+            filename: Output filename (default "enharmonic_candidates.csv").
+        """
         enharmonics_info = self.get_enharmonics(
             tolerance = tolerance,
             limit = limit,
@@ -395,6 +432,14 @@ class Pitch():
         output_directory: str | None = None,
         filename: str = "enharmonic_candidates.txt",
         lookup_table_path: str | None = None) -> None:
+        """Write an enharmonic search report to a text file.
+
+        See get_enharmonics() for search parameter descriptions.
+
+        Args:
+            output_directory: Directory to write to. Defaults to the current working directory.
+            filename: Output filename (default "enharmonic_candidates.txt").
+        """
         enharmonics_info = self.get_enharmonics(
             tolerance = tolerance,
             limit = limit,
