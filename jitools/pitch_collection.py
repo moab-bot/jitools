@@ -157,6 +157,12 @@ class PitchCollection():
             precision = precision)
 
     def write_info_to_csv(self, output_directory: str | None = None, filename: str = "pitch_collection_info.csv") -> None:
+        """Write pitch collection data to a CSV file.
+
+        Args:
+            output_directory: Directory to write to. Defaults to the current working directory.
+            filename: Output filename (default "pitch_collection_info.csv").
+        """
         final_info = []
         if output_directory is None:
             output_directory = os.getcwd()
@@ -207,6 +213,14 @@ class PitchCollection():
         print("file written to " + path_to_write_file)
 
     def write_info_to_txt(self, variety: str = "all", output_directory: str | None = None, filename: str = "pitch_collection_info.txt") -> None:
+        """Write a formatted pitch collection report to a text file.
+
+        Args:
+            variety: One of "basic", "quantitative", "analytic", "normalized",
+                     "inversion", "resultants", "reference", or "all" (default).
+            output_directory: Directory to write to. Defaults to the current working directory.
+            filename: Output filename (default "pitch_collection_info.txt").
+        """
         strings_to_write = self._create_strings_for_print_and_txt(variety = variety)
         if output_directory is None:
             output_directory = os.getcwd()

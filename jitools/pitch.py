@@ -93,6 +93,11 @@ class Pitch():
         self.pitch_info = self._pitch_info()
 
     def create_strings_for_print_and_txt(self, variety: str = "basic") -> list[str]:
+        """Return formatted pitch information as a list of strings.
+
+        Args:
+            variety: One of "basic", "normalized", "reference", or "all".
+        """
         basic_info_strings = [
             "",
             "BASIC INFO",
@@ -502,6 +507,13 @@ class Pitch():
         print("file written to " + path_to_write_file)
 
     def write_info_to_txt(self, variety: str = "all", output_directory: str | None = None, filename: str = "pitch_info.txt") -> None:
+        """Write a formatted pitch report to a text file.
+
+        Args:
+            variety: One of "basic", "normalized", "reference", or "all" (default).
+            output_directory: Directory to write to. Defaults to the current working directory.
+            filename: Output filename (default "pitch_info.txt").
+        """
         strings_to_write = self.create_strings_for_print_and_txt(variety = variety)
         if output_directory is None:
             output_directory = os.getcwd()
