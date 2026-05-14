@@ -26,11 +26,40 @@ class Pitch():
             rf: Frequency of the reference pitch in Hz. Defaults to 440.0.
             precision: Decimal places used for floating-point display. Defaults to 5.
         """
+        if not isinstance(rf, (int, float)) or rf <= 0:
+            raise ValueError(f"rf must be a positive number, got {rf!r}")
+        if not isinstance(precision, int) or precision < 0:
+            raise ValueError(f"precision must be a non-negative integer, got {precision!r}")
+        if isinstance(p, tuple):
+            if len(p) != 2:
+                raise ValueError(f"p as a tuple must have exactly 2 elements, got {len(p)}: {p!r}")
+            if not isinstance(p[0], int) or not isinstance(p[1], int):
+                raise TypeError(f"p tuple elements must be integers, got ({type(p[0]).__name__}, {type(p[1]).__name__})")
+            if p[1] == 0:
+                raise ValueError("p denominator cannot be zero")
+            if p[0] <= 0 or p[1] <= 0:
+                raise ValueError(f"p numerator and denominator must both be positive, got {p!r}")
+        elif isinstance(p, fractions.Fraction):
+            if p <= 0:
+                raise ValueError(f"p as a Fraction must be positive, got {p!r}")
+        elif isinstance(p, list):
+            if not all(isinstance(x, int) for x in p):
+                raise TypeError("p as a monzo must be a list of integers")
+        else:
+            raise TypeError(
+                f"p must be a (numerator, denominator) tuple, a Fraction, or a monzo list of integers, "
+                f"got {type(p).__name__!r}"
+            )
         self.reference_pitch = rp
         self.reference_freq = rf
         self.precision = precision
         self._vector_primes = DEFAULT_MONZO_PRIMES
         self.rk_and_fo = self._reference_keynum_and_fund_offset_from_pitch_letter_name_and_octave()
+        if self.rk_and_fo is None:
+            raise ValueError(
+                f"rp {rp!r} is not a recognized pitch name. "
+                "Use a letter name and octave number, e.g. 'A4', 'C4', 'Bb3', 'F#2'."
+            )
         self.reference_keynum = self.rk_and_fo[0]
         self._fund_offset = self.rk_and_fo[1]
         if isinstance(p, fractions.Fraction):

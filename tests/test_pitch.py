@@ -189,7 +189,7 @@ def test_reference_fund_offset(rp, _, expected_fund_offset):
 
 
 def test_invalid_reference_pitch_raises():
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         Pitch(p=(1, 1), rp="Z9")
 
 

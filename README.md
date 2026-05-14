@@ -417,11 +417,12 @@ Parameters for `generate_enharmonic_lookup_table()`:
 
 ## State of the Project
 
-I view this project as being in its infancy, and I intend continually refine the code and add more features/tools as time allows. I am aware of the need for:
+**jitools** is actively maintained and continuously refined. See [CHANGELOG.md](CHANGELOG.md) for a full history of changes.
 
-- comprehensive documentation
-- improving performance of **jitools.PitchCollection()** for larger pitch sets (> c. 12 pitches)
-- exception/error handling
+Areas for future development:
+
+- auto-generated API reference documentation
+- additional JI tools and features
 
 A Jupyter notebook tutorial covering the full API is available in `examples/jitools_tutorial.ipynb`.
 

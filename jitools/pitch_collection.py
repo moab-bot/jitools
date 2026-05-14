@@ -17,7 +17,8 @@ class PitchCollection():
         rp: str = "A4",
         rf: float = 440.0,
         ti: list[tuple[int, int]] | None = None,
-        precision: int = 5) -> None:
+        precision: int = 5,
+        _allow_single_pitch: bool = False) -> None:
         """
         Args:
             pc: List of pitches as (numerator, denominator) tuples or Fractions.
@@ -27,6 +28,10 @@ class PitchCollection():
                 Defaults to the Sabat-Schweinitz tuneable interval list.
             precision: Decimal places used for floating-point display. Defaults to 5.
         """
+        if not isinstance(pc, list):
+            raise TypeError(f"pc must be a list of pitch tuples, got {type(pc).__name__!r}")
+        if not _allow_single_pitch and len(pc) < 2:
+            raise ValueError(f"pc must contain at least 2 pitches, got {len(pc)}")
         if ti is None:
             ti = constants.SABAT_SCHWEINITZ_TUNEABLE_INTERVALS
         self.pc_raw = []
@@ -270,38 +275,42 @@ class PitchCollection():
             ""]
 
         if variety == "normalized" or variety == "all":
-            normalized_ci = PitchCollection(pc = self.normalized_ratios, 
-                rp = self.reference_pitch, 
+            normalized_ci = PitchCollection(pc = self.normalized_ratios,
+                rp = self.reference_pitch,
                 rf = self.reference_freq,
-                precision = self.precision)
+                precision = self.precision,
+                _allow_single_pitch = True)
             normalized_info_strings = normalized_ci._create_strings_for_print_and_txt(variety = "basic")
             del normalized_info_strings[-3]
             normalized_info_strings[1] = "NORMALIZED INFO"
 
         if variety == "inversion" or variety == "all":
-            inversion_ci = PitchCollection(pc = self.inversion, 
-                rp = self.reference_pitch, 
+            inversion_ci = PitchCollection(pc = self.inversion,
+                rp = self.reference_pitch,
                 rf = self.reference_freq,
-                precision = self.precision)
+                precision = self.precision,
+                _allow_single_pitch = True)
             inversion_info_strings = inversion_ci._create_strings_for_print_and_txt(variety = "basic")
             del inversion_info_strings[-2]
             inversion_info_strings[1] = "INVERSION INFO"
 
         if variety == "resultants" or variety == "all":
             difference_tones_ci = PitchCollection(
-                pc = self.difference_tones, 
-                rp = self.reference_pitch, 
+                pc = self.difference_tones,
+                rp = self.reference_pitch,
                 rf = self.reference_freq,
-                precision = self.precision)
+                precision = self.precision,
+                _allow_single_pitch = True)
             difference_tones_info_strings = difference_tones_ci._create_strings_for_print_and_txt(variety = "basic")
             difference_tones_info_strings[1] = "FIRST-ORDER DIFFERENCE TONES"
             tuneable_difference_tones_strings = "tuneable ratios: " + str([utilities_general.convert_data_to_readable_string(x) for x in self.tuneable_difference_tones])
             difference_tones_info_strings = difference_tones_info_strings[:3] + [tuneable_difference_tones_strings] + difference_tones_info_strings[3:][:-5] + [""]
             summation_tones_ci = PitchCollection(
-                pc = self.summation_tones, 
-                rp = self.reference_pitch, 
+                pc = self.summation_tones,
+                rp = self.reference_pitch,
                 rf = self.reference_freq,
-                precision = self.precision)
+                precision = self.precision,
+                _allow_single_pitch = True)
             summation_tones_info_strings = summation_tones_ci._create_strings_for_print_and_txt(variety = "basic")
             summation_tones_info_strings[1] = "FIRST-ORDER SUMMATION TONES"
             tuneable_summation_tones_strings = "tuneable ratios: " + str([utilities_general.convert_data_to_readable_string(x) for x in self.tuneable_summation_tones])
