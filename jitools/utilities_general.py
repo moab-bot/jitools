@@ -33,6 +33,8 @@ def convert_data_to_readable_string(d: int | float | Fraction, precision: int = 
     """Format d as a string, rounding floats to precision decimal places."""
     if isinstance(d, float):
         formatted_string = str(round(d, precision))
+    elif isinstance(d, Fraction):
+        formatted_string = f"{d.numerator}/{d.denominator}"
     else:
         formatted_string = str(d)
     if prefix is not None:

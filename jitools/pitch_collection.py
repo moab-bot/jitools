@@ -210,10 +210,10 @@ class PitchCollection():
         quantitative_info_strings = [
             "",
             "QUANTITATIVE INFO",
-            "average ratio: " + str(self.avg_ratio),
-            "minimum ratio: " + str(self.minimum_ratio),
-            "maximum ratio: " + str(self.maximum_ratio),
-            "ratio span: " + str(self.ratio_span),
+            "average ratio: " + utilities_general.convert_data_to_readable_string(self.avg_ratio),
+            "minimum ratio: " + utilities_general.convert_data_to_readable_string(self.minimum_ratio),
+            "maximum ratio: " + utilities_general.convert_data_to_readable_string(self.maximum_ratio),
+            "ratio span: " + utilities_general.convert_data_to_readable_string(self.ratio_span),
             "average frequency (Hz): " + utilities_general.convert_data_to_readable_string(self.avg_freq, precision = self.precision),
             "minimum frequency (Hz): " + utilities_general.convert_data_to_readable_string(self.minimum_freq, precision = self.precision),
             "maximum frequency (Hz): " + utilities_general.convert_data_to_readable_string(self.maximum_freq, precision = self.precision),
@@ -236,8 +236,8 @@ class PitchCollection():
             "constituent primes: " + str(self.constituent_primes),
             "harmonic distance sum: " + str(round(self.hd_sum, self.precision)),
             "average harmonic distance: " + str(round(self.hd_avg, self.precision)),
-            "harmonic intersection: " + str(self.harmonic_intersection) + " (" + str(round(float(self.harmonic_intersection), self.precision)) + ")",
-            "harmonic disjunction: " + str(self.harmonic_disjunction) + " (" + str(round(float(self.harmonic_disjunction), self.precision)) + ")",
+            "harmonic intersection: " + utilities_general.convert_data_to_readable_string(self.harmonic_intersection) + " (" + str(round(float(self.harmonic_intersection), self.precision)) + ")",
+            "harmonic disjunction: " + utilities_general.convert_data_to_readable_string(self.harmonic_disjunction) + " (" + str(round(float(self.harmonic_disjunction), self.precision)) + ")",
             ""]
 
         if variety == "normalized" or variety == "all":

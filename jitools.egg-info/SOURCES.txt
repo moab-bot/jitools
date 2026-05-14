@@ -4,6 +4,7 @@ setup.cfg
 setup.py
 jitools/__init__.py
 jitools/constants.py
+jitools/lookup_table_generator.py
 jitools/pitch.py
 jitools/pitch_collection.py
 jitools/prime_list.py

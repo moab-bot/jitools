@@ -59,7 +59,7 @@ class Pitch():
         basic_info_strings = [
             "",
             "BASIC INFO",
-            "ratio: " + str(self.ratio),
+            "ratio: " + utilities_general.convert_data_to_readable_string(self.ratio),
             "monzo: " + str(self.monzo),
             "constituent primes: " + str(self.constituent_primes),
             "frequency (Hz): " + utilities_general.convert_data_to_readable_string(self.freq, precision = self.precision),
@@ -72,10 +72,10 @@ class Pitch():
         normalized_info_strings = [
             "",
             "NORMALIZED INFO",
-            "normalized ratio: " + str(self.normalized_ratio),
+            "normalized ratio: " + utilities_general.convert_data_to_readable_string(self.normalized_ratio),
             "normalized monzo: " + str(self.normalized_monzo),
             "MIDI key number class: " + utilities_general.convert_data_to_readable_string(self.keynum_class, precision = self.precision),
-            "normalized complement: " + str(self.normalized_complement),
+            "normalized complement: " + utilities_general.convert_data_to_readable_string(self.normalized_complement),
             "normalized harmonic distance: " + utilities_general.convert_data_to_readable_string(self.normalized_harmonic_distance, precision = self.precision),
             ""]
         reference_info_strings = [
@@ -188,7 +188,7 @@ class Pitch():
                             limit_ok = False
                     forbidden_prime_indices = [vector_primes.index(i) for i in exclude_primes]
                     for i in forbidden_prime_indices:
-                        if candidate_monzo[i] != 0:
+                        if i < len(candidate_monzo) and candidate_monzo[i] != 0:
                             limit_ok = False
                     if limit_ok:
                         if abs(candidate_pc_height - reference_pc_height) > tolerance:
@@ -254,15 +254,17 @@ class Pitch():
         max_symbols: int = 2,
         max_hd: float = 30,
         max_candidates: int = 10,
-        sort_by: str = "tolerance") -> None:
+        sort_by: str = "tolerance",
+        lookup_table_path: str | None = None) -> None:
         enharmonics_info = self.get_enharmonics(
-            tolerance = tolerance, 
-            limit = limit, 
-            exclude_primes = exclude_primes, 
-            max_symbols = max_symbols, 
-            max_hd = max_hd, 
-            max_candidates = max_candidates, 
-            sort_by = sort_by)
+            tolerance = tolerance,
+            limit = limit,
+            exclude_primes = exclude_primes,
+            max_symbols = max_symbols,
+            max_hd = max_hd,
+            max_candidates = max_candidates,
+            sort_by = sort_by,
+            lookup_table_path = lookup_table_path)
         num_enharmonics = len(enharmonics_info)
         header_strings = self._create_strings_for_enharmonics_header(
                 tolerance = tolerance,
@@ -309,15 +311,17 @@ class Pitch():
         max_candidates: int = 10,
         sort_by: str = "tolerance",
         output_directory: str | None = None,
-        filename: str = "enharmonic_candidates.csv") -> None:
+        filename: str = "enharmonic_candidates.csv",
+        lookup_table_path: str | None = None) -> None:
         enharmonics_info = self.get_enharmonics(
-            tolerance = tolerance, 
-            limit = limit, 
-            exclude_primes = exclude_primes, 
-            max_symbols = max_symbols, 
-            max_hd = max_hd, 
-            max_candidates = max_candidates, 
-            sort_by = sort_by)
+            tolerance = tolerance,
+            limit = limit,
+            exclude_primes = exclude_primes,
+            max_symbols = max_symbols,
+            max_hd = max_hd,
+            max_candidates = max_candidates,
+            sort_by = sort_by,
+            lookup_table_path = lookup_table_path)
         num_enharmonics = len(enharmonics_info)
         header_strings = self._create_strings_for_enharmonics_header(
             tolerance = tolerance,
@@ -389,15 +393,17 @@ class Pitch():
         max_candidates: int = 10,
         sort_by: str = "tolerance",
         output_directory: str | None = None,
-        filename: str = "enharmonic_candidates.txt") -> None:
+        filename: str = "enharmonic_candidates.txt",
+        lookup_table_path: str | None = None) -> None:
         enharmonics_info = self.get_enharmonics(
-            tolerance = tolerance, 
-            limit = limit, 
-            exclude_primes = exclude_primes, 
-            max_symbols = max_symbols, 
-            max_hd = max_hd, 
-            max_candidates = max_candidates, 
-            sort_by = sort_by)
+            tolerance = tolerance,
+            limit = limit,
+            exclude_primes = exclude_primes,
+            max_symbols = max_symbols,
+            max_hd = max_hd,
+            max_candidates = max_candidates,
+            sort_by = sort_by,
+            lookup_table_path = lookup_table_path)
         num_enharmonics = len(enharmonics_info)
         header_strings = self._create_strings_for_enharmonics_header(
             tolerance = tolerance,
