@@ -310,6 +310,64 @@ class TestLargePitchSet:
         assert len(col.intervals) > 0
 
 
+# ── input validation ─────────────────────────────────────────────────────────
+
+class TestValidation:
+    def test_non_list_raises(self):
+        with pytest.raises(TypeError):
+            PitchCollection("not a list")
+
+    def test_empty_list_raises(self):
+        with pytest.raises(ValueError):
+            PitchCollection([])
+
+    def test_single_pitch_raises(self):
+        with pytest.raises(ValueError):
+            PitchCollection([(1, 1)])
+
+    def test_bad_rf_raises(self):
+        with pytest.raises(ValueError):
+            PitchCollection([(1, 1), (3, 2)], rf=0)
+
+    def test_bad_rp_raises(self):
+        with pytest.raises(ValueError):
+            PitchCollection([(1, 1), (3, 2)], rp="Z9")
+
+
+# ── harmonic intersection cap and antichain ───────────────────────────────────
+
+class TestHarmonicIntersectionCapAndAntichain:
+    def test_large_collection_intersection_is_none(self):
+        # 25 distinct primes → 25 coprime harmonics > cap of 24 → None
+        primes = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
+        col = make_pc([(p, 1) for p in primes])
+        assert col.harmonic_intersection is None
+
+    def test_large_collection_disjunction_is_none(self):
+        primes = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
+        col = make_pc([(p, 1) for p in primes])
+        assert col.harmonic_disjunction is None
+
+    def test_print_info_handles_none(self, capsys):
+        # print_info("analytic") must not raise when intersection is None
+        primes = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97]
+        col = make_pc([(p, 1) for p in primes])
+        col.print_info("analytic")
+        out = capsys.readouterr().out
+        assert "N/A" in out
+
+    def test_harmonic_series_antichain_reduces_to_one(self):
+        # Harmonics [1,2,...,10]: every h divides all multiples, antichain = {1}
+        # → inclusion-exclusion on [1] alone → intersection = 1/1
+        col = make_pc([(k, 1) for k in range(1, 11)])
+        assert col.harmonic_intersection == fractions.Fraction(1, 1)
+
+    def test_intersection_below_cap_is_fraction(self):
+        # A collection that stays within the cap should still return a Fraction
+        col = make_pc([(1, 1), (5, 4), (3, 2), (7, 4)])
+        assert isinstance(col.harmonic_intersection, fractions.Fraction)
+
+
 # ── update ────────────────────────────────────────────────────────────────────
 
 class TestUpdate:

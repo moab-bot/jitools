@@ -261,13 +261,13 @@ class PitchCollection():
             "harmonic distance sum: " + str(round(self.hd_sum, self.precision)),
             "average harmonic distance: " + str(round(self.hd_avg, self.precision)),
             "harmonic intersection: " + (
-                "N/A (more than 20 independent harmonics)"
+                "N/A (more than 24 independent harmonics)"
                 if self.harmonic_intersection is None else
                 utilities_general.convert_data_to_readable_string(self.harmonic_intersection)
                 + " (" + str(round(float(self.harmonic_intersection), self.precision)) + ")"
             ),
             "harmonic disjunction: " + (
-                "N/A (more than 20 independent harmonics)"
+                "N/A (more than 24 independent harmonics)"
                 if self.harmonic_disjunction is None else
                 utilities_general.convert_data_to_readable_string(self.harmonic_disjunction)
                 + " (" + str(round(float(self.harmonic_disjunction), self.precision)) + ")"
@@ -346,21 +346,29 @@ class PitchCollection():
         Applies an antichain filter first: if harmonic h_j is a multiple of h_i,
         its contribution is subsumed by h_i and it can be removed without changing
         the result. Returns None if the effective harmonic count after filtering
-        exceeds 20, since 2^n inclusion-exclusion would be impractical.
+        exceeds 24, since 2^n inclusion-exclusion would be impractical.
         """
         harmonics = list(set(self.harmonics))
         harmonics = [int(h / reduce(math.gcd, harmonics)) for h in harmonics]
         # Remove any h that is a strict multiple of another h in the list
         harmonics = [h for h in harmonics
                      if not any(h % other == 0 and h != other for other in harmonics)]
-        if len(harmonics) > 20:
+        if len(harmonics) > 24:
             return None
-        output = fractions.Fraction(0, 1)
+        num, den = 0, 1
         for i in range(1, len(harmonics) + 1):
             sign = 1 if i % 2 != 0 else -1
             for c in combinations(harmonics, i):
-                output += fractions.Fraction(sign, utilities_general.lcm(c))
-        return output
+                l = math.lcm(*c)
+                g = math.gcd(den, l)
+                new_den = den // g * l
+                num = num * (new_den // den) + sign * (new_den // l)
+                den = new_den
+                g2 = math.gcd(abs(num), den)
+                if g2 > 1:
+                    num //= g2
+                    den //= g2
+        return fractions.Fraction(num, den)
 
     def _harmonics(self, ratios: list[fractions.Fraction]) -> list[int]:
         """Return the integer harmonic series representation of the given ratios."""

@@ -193,6 +193,46 @@ def test_invalid_reference_pitch_raises():
         Pitch(p=(1, 1), rp="Z9")
 
 
+# ── input validation ──────────────────────────────────────────────────────────
+
+class TestValidation:
+    def test_zero_numerator_raises(self):
+        with pytest.raises(ValueError):
+            Pitch(p=(0, 1))
+
+    def test_zero_denominator_raises(self):
+        with pytest.raises(ValueError):
+            Pitch(p=(1, 0))
+
+    def test_negative_numerator_raises(self):
+        with pytest.raises(ValueError):
+            Pitch(p=(-3, 2))
+
+    def test_float_tuple_elements_raise(self):
+        with pytest.raises(TypeError):
+            Pitch(p=(1.5, 2))
+
+    def test_wrong_tuple_length_raises(self):
+        with pytest.raises(ValueError):
+            Pitch(p=(1, 2, 3))
+
+    def test_string_p_raises(self):
+        with pytest.raises(TypeError):
+            Pitch(p="3/2")
+
+    def test_zero_rf_raises(self):
+        with pytest.raises(ValueError):
+            Pitch(p=(1, 1), rf=0)
+
+    def test_negative_rf_raises(self):
+        with pytest.raises(ValueError):
+            Pitch(p=(1, 1), rf=-440)
+
+    def test_negative_precision_raises(self):
+        with pytest.raises(ValueError):
+            Pitch(p=(1, 1), precision=-1)
+
+
 # ── HEJI notation ─────────────────────────────────────────────────────────────
 
 class TestNotation:
