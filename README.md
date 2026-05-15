@@ -4,7 +4,7 @@
 
 **jitools** is a Python-based set of utilities for **just intonation (JI)** pitch and pitch collection research and analysis. It may also be incorporated into workflows for computer-assisted algorithmic composition.
 
-**jitools** shares some functionalities with **[Thomas Nicholson](https://thomasnicholson.ca/)**'s JavaScript-based online resource, the **[Plainsound Harmonic Space Calculator](https://www.plainsound.org/HEJI/)**.
+**jitools** shares some functionalities with **[Thomas Nicholson](https://superparticular.com/)**'s JavaScript-based online resource, the **[Plainsound Harmonic Space Calculator](https://www.plainsound.org/HEJI/)**.
 
 **jitools** works on Python 3.10+.
 
@@ -12,7 +12,7 @@
 
 JI is a musical model wherein the intervals between pitches are, as best as possible, tuned as small natural number frequency ratios. Aside from this basic tenet, there are no restrictions on the aesthetic or style of JI music. That said, music in JI often has certain tendencies that highlight or enable its very precise tuning.
 
-JI has its own particular set of analytical concerns for composers, music theorists, and musicians. Many of these issues are well-described in the 2018 paper **["Fundamental Principles of Just Intonation and Microtonal Composition"](https://marsbat.space/pdfs/JI.pdf)** by Thomas Nicholson and **[Marc Sabat](https://www.marsbat.space/)**. This paper is essential reading for anyone interested in JI and for anyone who wants to use or understand **jitools**.
+JI has its own particular set of analytical concerns for composers, music theorists, and musicians. Many of these issues are well-described in the 2018 paper **["Fundamental Principles of Just Intonation and Microtonal Composition"](https://masa.plainsound.org/pdfs/JI.pdf)** by Thomas Nicholson and **[Marc Sabat](https://masa.plainsound.org/)**. This paper is essential reading for anyone interested in JI and for anyone who wants to use or understand **jitools**.
 
 ## Installation
 
@@ -63,11 +63,11 @@ JI pitches usually deviate from a nearby 12-tone equal temperament (12-ED2) pitc
 
 ### Notation
 
-There are various methods for JI pitch notation, including **[Ben Johnston's well-known system](https://www.kylegann.com/BJNotation.html)** and **[Sagittal](http://sagittal.org/)** notation, among others. Perhaps the foremost JI pitch notation system in wide use today is the **[Extended Helmholtz-Ellis JI Pitch Notation (HEJI)](https://marsbat.space/pdfs/HEJI2legend+series.pdf)**, originally developed by Marc Sabat and **[Wolfgang von Schweinitz](https://plainsound.org/artist/wolfgang_von_schweinitz.html)** in the early 2000s, and revised in 2020 by Sabat and Thomas Nicholson in collaboration with Schweinitz, **[Catherine Lamb](http://www.sacredrealism.org/catlamb/index.html)**, and myself. The revised version is known as **HEJI2**.
+There are various methods for JI pitch notation, including **[Ben Johnston's well-known system](https://www.kylegann.com/BJNotation.html)** and **[Sagittal](http://sagittal.org/)** notation, among others. Perhaps the foremost JI pitch notation system in wide use today is the **[Extended Helmholtz-Ellis JI Pitch Notation (HEJI)](https://masa.plainsound.org/pdfs/notation.pdf)**, originally developed by Marc Sabat and **[Wolfgang von Schweinitz](https://plainsound.org/artist/wolfgang_von_schweinitz.html)** in the early 2000s, and revised in 2020 by Sabat and Thomas Nicholson in collaboration with Schweinitz, **[Catherine Lamb](http://www.sacredrealism.org/catlamb/index.html)**, and myself. The revised version is known as **HEJI2**.
 
 In HEJI/HEJI2, each prime factor of a frequency ratio is denoted with a distinctive accidental glyph. These accidentals appear, alone or in various combinations, in front of letter-name notes on a conventional 5-line musical staff. Musicians familiar with the notation can then interpret the ratios and produce the desired sounds.
 
-The HEJI2 font is available as a cross-platform free download **[here](https://marsbat.space/2021_HEJI2_web_release.zip)**. Once installed the HEJI2 fonts may be used with any modern music notation program. The glyphs are mapped to ordinary keyboard characters and may be typed. Accidentals and combinations of accidentals may be stored as text strings.
+The HEJI2 font is available as a cross-platform free download **[here](https://github.com/PLAINSOUND/HEJI2)**. Once installed the HEJI2 fonts may be used with any modern music notation program. The glyphs are mapped to ordinary keyboard characters and may be typed. Accidentals and combinations of accidentals may be stored as text strings.
 
 **jitools.Pitch()** handles the creation of these HEJI2 text strings based on the provided ratio and reference pitch information, and also assigns the correct letter-name pitch. This hastens the translation from ratio-based thinking to HEJI2 notation. One may copy-and-paste the strings while using the HEJI2 font in a notation program, for example. The `.notation` attribute stores a duple consisting of the HEJI2 text string and letter-name pitch:
 
@@ -245,7 +245,7 @@ file written to /current/working/directory/pitch_collection_info.csv
 
 ## Enharmonic Search
 
-Another functionality of **jitools.Pitch()** is **enharmonic search**. Enharmonics in JI are two rational pitches that are extremely close to each other in terms of pitch height -- generally within about 4 cents or less -- so close that the difference between their pitch heights cannot be perceived by ear, or at worst can barely be perceived in a harmonic context (see **[Nicholson/Sabat](https://marsbat.space/pdfs/JI.pdf)**, p. 16-19).
+Another functionality of **jitools.Pitch()** is **enharmonic search**. Enharmonics in JI are two rational pitches that are extremely close to each other in terms of pitch height -- generally within about 4 cents or less -- so close that the difference between their pitch heights cannot be perceived by ear, or at worst can barely be perceived in a harmonic context (see **[Nicholson/Sabat](https://masa.plainsound.org/pdfs/JI.pdf)**, p. 16-19).
 
 Enharmonic assessment can be useful for a variety of purposes, particularly when one has arrived at an extremely complex ratio that is unfamiliar or cumbersome to notate/interpret. Often, one or more simpler nearby ratios are available as alternatives.
 
@@ -327,7 +327,7 @@ Various constraints on an enharmonic search may be customized, including:
 - `max_candidates`: maximum number of results to return (default = 10)
 - `lookup_table_path`: path to a custom lookup table CSV (default = None, uses the table shipped with the library)
 
-The `sort_by` parameter can also be changed. The default is `"tolerance"`, which orders results by how closely they match the pitch height of the original pitch. Results may also be sorted by `"harmonic distance"`, a measure developed by James Tenney which generally correlates to interval/ratio simplicity. (See **[Nicholson/Sabat](https://marsbat.space/pdfs/JI.pdf)**, p. 26-28, for more information about harmonic distance and other metrics invented by Tenney.)
+The `sort_by` parameter can also be changed. The default is `"tolerance"`, which orders results by how closely they match the pitch height of the original pitch. Results may also be sorted by `"harmonic distance"`, a measure developed by James Tenney which generally correlates to interval/ratio simplicity. (See **[Nicholson/Sabat](https://masa.plainsound.org/pdfs/JI.pdf)**, p. 26-28, for more information about harmonic distance and other metrics invented by Tenney.)
 
 In the example below, the same original pitch is used as above, but with more restricted tolerance and prime factors. Increasing the maximum allowed number of HEJI2 symbols yields two 3-symbol enharmonics, sorted by harmonic distance:
 
