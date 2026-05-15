@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="jitools",
-    version="1.0",
+    version="1.0.0",
     license="GNU GPLv3",
     author="M.O. Abbott",
     author_email="moab_bot@protonmail.com",
@@ -13,7 +13,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/moab-bot/jitools",
-    download_url = 'https://github.com/moab-bot/jitools/archive/v1.0.tar.gz',
+    download_url = 'https://github.com/moab-bot/jitools/archive/v1.0.0.tar.gz',
     packages=setuptools.find_packages(),
     package_data={
     "jitools": ["resources/*.csv"]
