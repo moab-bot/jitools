@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="jitools",
-    version="1.0.0",
+    version="1.1.0",
     license="GNU GPLv3",
     author="M.O. Abbott",
     author_email="moab_bot@protonmail.com",
@@ -13,12 +13,33 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/moab-bot/jitools",
-    download_url = 'https://github.com/moab-bot/jitools/archive/v1.0.0.tar.gz',
+    project_urls={
+        "Source": "https://github.com/moab-bot/jitools",
+        "Bug Tracker": "https://github.com/moab-bot/jitools/issues",
+        "Changelog": "https://github.com/moab-bot/jitools/blob/master/CHANGELOG.md",
+    },
+    keywords=[
+        "just intonation",
+        "microtonal",
+        "music theory",
+        "pitch",
+        "ratio",
+        "tuning",
+        "Helmholtz-Ellis",
+        "HEJI",
+        "harmonic distance",
+        "enharmonic",
+    ],
     packages=setuptools.find_packages(),
     package_data={
-    "jitools": ["resources/*.csv"]
+        "jitools": ["resources/*.csv"]
     },
     classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Science/Research",
+        "Intended Audience :: Education",
+        "Topic :: Multimedia :: Sound/Audio",
+        "Topic :: Scientific/Engineering :: Mathematics",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",

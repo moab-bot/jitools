@@ -156,17 +156,16 @@ class PitchCollection():
             ti = ti, 
             precision = precision)
 
-    def write_info_to_csv(self, output_directory: str | None = None, filename: str = "pitch_collection_info.csv") -> None:
+    def write_info_to_csv(self, output_path: str = "pitch_collection_info.csv", verbose: bool = False) -> None:
         """Write pitch collection data to a CSV file.
 
         Args:
-            output_directory: Directory to write to. Defaults to the current working directory.
-            filename: Output filename (default "pitch_collection_info.csv").
+            output_path: Path to the output file (default "pitch_collection_info.csv",
+                written to the current working directory). Supports ~ expansion.
+            verbose: If True, print the path of the written file (default False).
         """
         final_info = []
-        if output_directory is None:
-            output_directory = os.getcwd()
-        path_to_write_file = output_directory + "/" + filename
+        path_to_write_file = os.path.expanduser(output_path)
         data_types = [
             "", 
             "harm.", 
@@ -210,25 +209,26 @@ class PitchCollection():
         with open(path_to_write_file, "w") as output:
             writer = csv.writer(output, lineterminator='\n')
             writer.writerows(final_info)
-        print("file written to " + path_to_write_file)
+        if verbose:
+            print("file written to " + path_to_write_file)
 
-    def write_info_to_txt(self, variety: str = "all", output_directory: str | None = None, filename: str = "pitch_collection_info.txt") -> None:
+    def write_info_to_txt(self, variety: str = "all", output_path: str = "pitch_collection_info.txt", verbose: bool = False) -> None:
         """Write a formatted pitch collection report to a text file.
 
         Args:
             variety: One of "basic", "quantitative", "analytic", "normalized",
                      "inversion", "resultants", "reference", or "all" (default).
-            output_directory: Directory to write to. Defaults to the current working directory.
-            filename: Output filename (default "pitch_collection_info.txt").
+            output_path: Path to the output file (default "pitch_collection_info.txt",
+                written to the current working directory). Supports ~ expansion.
+            verbose: If True, print the path of the written file (default False).
         """
         strings_to_write = self._create_strings_for_print_and_txt(variety = variety)
-        if output_directory is None:
-            output_directory = os.getcwd()
-        path_to_write_file = output_directory + "/" + filename
+        path_to_write_file = os.path.expanduser(output_path)
         with open(path_to_write_file, "w") as output:
             for x in strings_to_write:
                 output.write(x + "\n")
-        print("file written to " + path_to_write_file)
+        if verbose:
+            print("file written to " + path_to_write_file)
 
     def _create_strings_for_print_and_txt(self, variety: str = "basic") -> list[str]:
         basic_info_strings = [
@@ -317,7 +317,7 @@ class PitchCollection():
                 _allow_single_pitch = True)
             difference_tones_info_strings = difference_tones_ci._create_strings_for_print_and_txt(variety = "basic")
             difference_tones_info_strings[1] = "FIRST-ORDER DIFFERENCE TONES"
-            tuneable_difference_tones_strings = "tuneable ratios: " + str([utilities_general.convert_data_to_readable_string(x) for x in self.tuneable_difference_tones])
+            tuneable_difference_tones_strings = "tuneable ratios (vs. any ratio from original chord): " + str([utilities_general.convert_data_to_readable_string(x) for x in self.tuneable_difference_tones])
             difference_tones_info_strings = difference_tones_info_strings[:3] + [tuneable_difference_tones_strings] + difference_tones_info_strings[3:][:-5] + [""]
             summation_tones_ci = PitchCollection(
                 pc = self.summation_tones,
@@ -327,7 +327,7 @@ class PitchCollection():
                 _allow_single_pitch = True)
             summation_tones_info_strings = summation_tones_ci._create_strings_for_print_and_txt(variety = "basic")
             summation_tones_info_strings[1] = "FIRST-ORDER SUMMATION TONES"
-            tuneable_summation_tones_strings = "tuneable ratios: " + str([utilities_general.convert_data_to_readable_string(x) for x in self.tuneable_summation_tones])
+            tuneable_summation_tones_strings = "tuneable ratios (vs. any ratio from original chord): " + str([utilities_general.convert_data_to_readable_string(x) for x in self.tuneable_summation_tones])
             summation_tones_info_strings = summation_tones_info_strings[:3] + [tuneable_summation_tones_strings] + summation_tones_info_strings[3:][:-5] + [""]
             resultant_tones_info_strings = difference_tones_info_strings + summation_tones_info_strings[1:]
         

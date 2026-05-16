@@ -368,9 +368,8 @@ def test_notation_accidental_string(ratio, rp, expected_acc, expected_letter):
 
 # ── enharmonics ───────────────────────────────────────────────────────────────
 
-@pytest.mark.slow
 class TestEnharmonics:
-    """Reads the 14.5 MB CSV lookup table. Run with: pytest (no -m filter)."""
+    """Tests that read the default 6.8 MB enharmonic lookup table shipped with the library."""
 
     def test_returns_list(self):
         result = Pitch(p=(81, 80)).get_enharmonics()
@@ -406,3 +405,26 @@ class TestEnharmonics:
         result = p.get_enharmonics()
         returned_ratios = [e[0] for e in result]
         assert p.ratio not in returned_ratios
+
+
+# ── file I/O ──────────────────────────────────────────────────────────────────
+
+class TestFileIO:
+    def test_write_info_to_txt_creates_file(self, tmp_path):
+        Pitch(p=(3, 2)).write_info_to_txt(output_path=str(tmp_path / "pitch_info.txt"))
+        assert (tmp_path / "pitch_info.txt").exists()
+
+    def test_write_info_to_txt_tilde_expansion(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("HOME", str(tmp_path))
+        Pitch(p=(3, 2)).write_info_to_txt(output_path="~/pitch_info.txt")
+        assert (tmp_path / "pitch_info.txt").exists()
+
+    def test_write_enharmonics_info_to_csv_tilde_expansion(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("HOME", str(tmp_path))
+        Pitch(p=(81, 80)).write_enharmonics_info_to_csv(output_path="~/enh.csv")
+        assert (tmp_path / "enh.csv").exists()
+
+    def test_write_enharmonics_info_to_txt_tilde_expansion(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("HOME", str(tmp_path))
+        Pitch(p=(81, 80)).write_enharmonics_info_to_txt(output_path="~/enh.txt")
+        assert (tmp_path / "enh.txt").exists()

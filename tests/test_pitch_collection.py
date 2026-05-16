@@ -255,37 +255,47 @@ class TestTuneableClassification:
 class TestFileIO:
     def test_write_info_to_txt_creates_file(self, tmp_path):
         col = make_pc([(1, 1), (3, 2)])
-        col.write_info_to_txt(output_directory=str(tmp_path))
+        col.write_info_to_txt(output_path=str(tmp_path / "pitch_collection_info.txt"))
         assert (tmp_path / "pitch_collection_info.txt").exists()
 
     def test_write_info_to_txt_content(self, tmp_path):
         col = make_pc([(1, 1), (3, 2)])
-        col.write_info_to_txt(output_directory=str(tmp_path))
+        col.write_info_to_txt(output_path=str(tmp_path / "pitch_collection_info.txt"))
         content = (tmp_path / "pitch_collection_info.txt").read_text()
         assert "BASIC INFO" in content
         assert "3/2" in content
 
     def test_write_info_to_txt_custom_filename(self, tmp_path):
         col = make_pc([(1, 1), (3, 2)])
-        col.write_info_to_txt(output_directory=str(tmp_path), filename="custom.txt")
+        col.write_info_to_txt(output_path=str(tmp_path / "custom.txt"))
         assert (tmp_path / "custom.txt").exists()
 
     def test_write_info_to_csv_creates_file(self, tmp_path):
         col = make_pc([(1, 1), (3, 2)])
-        col.write_info_to_csv(output_directory=str(tmp_path))
+        col.write_info_to_csv(output_path=str(tmp_path / "pitch_collection_info.csv"))
         assert (tmp_path / "pitch_collection_info.csv").exists()
 
     def test_write_info_to_csv_content(self, tmp_path):
         col = make_pc([(1, 1), (3, 2)])
-        col.write_info_to_csv(output_directory=str(tmp_path))
+        col.write_info_to_csv(output_path=str(tmp_path / "pitch_collection_info.csv"))
         content = (tmp_path / "pitch_collection_info.csv").read_text()
         assert "ratio" in content
         assert "3/2" in content
 
     def test_write_info_to_csv_custom_filename(self, tmp_path):
         col = make_pc([(1, 1), (3, 2)])
-        col.write_info_to_csv(output_directory=str(tmp_path), filename="custom.csv")
+        col.write_info_to_csv(output_path=str(tmp_path / "custom.csv"))
         assert (tmp_path / "custom.csv").exists()
+
+    def test_write_info_to_txt_tilde_expansion(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("HOME", str(tmp_path))
+        make_pc([(1, 1), (3, 2)]).write_info_to_txt(output_path="~/pc.txt")
+        assert (tmp_path / "pc.txt").exists()
+
+    def test_write_info_to_csv_tilde_expansion(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("HOME", str(tmp_path))
+        make_pc([(1, 1), (3, 2)]).write_info_to_csv(output_path="~/pc.csv")
+        assert (tmp_path / "pc.csv").exists()
 
 
 # ── large pitch sets ──────────────────────────────────────────────────────────

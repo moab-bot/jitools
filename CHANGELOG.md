@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.1.0 (2026-05-15)
+
+### Breaking changes
+- `Pitch.write_info_to_txt`, `Pitch.write_enharmonics_info_to_txt`, `Pitch.write_enharmonics_info_to_csv`,
+  `PitchCollection.write_info_to_txt`, and `PitchCollection.write_info_to_csv`: the `output_directory`
+  and `filename` parameters have been replaced with a single `output_path` parameter (e.g.
+  `output_path="~/Desktop/myfile.txt"`), consistent with `generate_enharmonic_lookup_table` and
+  standard Python file I/O conventions.
+- All five write methods now default to silent output. Pass `verbose=True` to print the path of the
+  written file, consistent with the existing behaviour of `generate_enharmonic_lookup_table`.
+
+### Bug fixes
+- All write methods now correctly expand `~` in `output_path` (e.g. `"~/Desktop/myfile.txt"`).
+
+### New features
+- `jitools.__version__` is now available after `import jitools`, returning the installed package version.
+
+### Other changes
+- `PitchCollection.print_info` and `PitchCollection.write_info_to_txt`: the `tuneable ratios:` label
+  in difference and summation tone sections is now `tuneable ratios (vs. any ratio from original chord):`
+  to clarify that tuneability is assessed relative to the original chord pitches, not the resultant
+  tones themselves.
+- `generate_enharmonic_lookup_table` no longer requires a separate import; it is available directly
+  as `jitools.generate_enharmonic_lookup_table` after `import jitools`.
+- `setup.py`: added `project_urls` (Source, Bug Tracker, Changelog), `keywords`, and classifiers
+  for Development Status, Intended Audience, and Topic.
+- Test suite: removed the `slow` marker — all 229 tests now run by default in under 1 second.
+- Added `tests/verify_readme.py` and `tests/verify_notebook.py`: scripts that verify all non-slow
+  command outputs shown in the README and Jupyter tutorial match the library's actual output.
+
 ## 1.0.0 (2026-05-14)
 
 ### Breaking changes

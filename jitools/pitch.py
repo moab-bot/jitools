@@ -373,16 +373,17 @@ class Pitch():
         max_hd: float = 30,
         max_candidates: int = 10,
         sort_by: str = "tolerance",
-        output_directory: str | None = None,
-        filename: str = "enharmonic_candidates.csv",
-        lookup_table_path: str | None = None) -> None:
+        output_path: str = "enharmonic_candidates.csv",
+        lookup_table_path: str | None = None,
+        verbose: bool = False) -> None:
         """Write an enharmonic search report to a CSV file.
 
         See get_enharmonics() for search parameter descriptions.
 
         Args:
-            output_directory: Directory to write to. Defaults to the current working directory.
-            filename: Output filename (default "enharmonic_candidates.csv").
+            output_path: Path to the output file (default "enharmonic_candidates.csv",
+                written to the current working directory). Supports ~ expansion.
+            verbose: If True, print the path of the written file (default False).
         """
         enharmonics_info = self.get_enharmonics(
             tolerance = tolerance,
@@ -408,9 +409,7 @@ class Pitch():
             formatted_header.append([" ", x])
         formatted_header.append(" ")
         final_info = formatted_header
-        if output_directory is None:
-            output_directory = os.getcwd()
-        path_to_write_file = output_directory + "/" + filename
+        path_to_write_file = os.path.expanduser(output_path)
         if num_enharmonics > 0:
             data_types = [
                 "", 
@@ -452,7 +451,8 @@ class Pitch():
             with open(path_to_write_file, "w") as output:
                 writer = csv.writer(output, lineterminator='\n')
                 writer.writerows(final_info)
-        print("file written to " + path_to_write_file)
+        if verbose:
+            print("file written to " + path_to_write_file)
 
     def write_enharmonics_info_to_txt(
         self,
@@ -463,16 +463,17 @@ class Pitch():
         max_hd: float = 30,
         max_candidates: int = 10,
         sort_by: str = "tolerance",
-        output_directory: str | None = None,
-        filename: str = "enharmonic_candidates.txt",
-        lookup_table_path: str | None = None) -> None:
+        output_path: str = "enharmonic_candidates.txt",
+        lookup_table_path: str | None = None,
+        verbose: bool = False) -> None:
         """Write an enharmonic search report to a text file.
 
         See get_enharmonics() for search parameter descriptions.
 
         Args:
-            output_directory: Directory to write to. Defaults to the current working directory.
-            filename: Output filename (default "enharmonic_candidates.txt").
+            output_path: Path to the output file (default "enharmonic_candidates.txt",
+                written to the current working directory). Supports ~ expansion.
+            verbose: If True, print the path of the written file (default False).
         """
         enharmonics_info = self.get_enharmonics(
             tolerance = tolerance,
@@ -493,9 +494,7 @@ class Pitch():
             max_candidates = max_candidates,
             sort_by = sort_by,
             num_qualified_candidates = num_enharmonics)
-        if output_directory is None:
-            output_directory = os.getcwd()
-        path_to_write_file = output_directory + "/" + filename
+        path_to_write_file = os.path.expanduser(output_path)
         with open(path_to_write_file, "w") as output:
             for x in header_strings:
                 output.write(x + "\n")
@@ -504,24 +503,25 @@ class Pitch():
                 enharmonics_strings = self._create_strings_for_enharmonics_info(enharmonics_info)
                 for x in enharmonics_strings:
                     output.write(x + "\n")
-        print("file written to " + path_to_write_file)
+        if verbose:
+            print("file written to " + path_to_write_file)
 
-    def write_info_to_txt(self, variety: str = "all", output_directory: str | None = None, filename: str = "pitch_info.txt") -> None:
+    def write_info_to_txt(self, variety: str = "all", output_path: str = "pitch_info.txt", verbose: bool = False) -> None:
         """Write a formatted pitch report to a text file.
 
         Args:
             variety: One of "basic", "normalized", "reference", or "all" (default).
-            output_directory: Directory to write to. Defaults to the current working directory.
-            filename: Output filename (default "pitch_info.txt").
+            output_path: Path to the output file (default "pitch_info.txt",
+                written to the current working directory). Supports ~ expansion.
+            verbose: If True, print the path of the written file (default False).
         """
         strings_to_write = self.create_strings_for_print_and_txt(variety = variety)
-        if output_directory is None:
-            output_directory = os.getcwd()
-        path_to_write_file = output_directory + "/" + filename
+        path_to_write_file = os.path.expanduser(output_path)
         with open(path_to_write_file, "w") as output:
             for x in strings_to_write:
                 output.write(x + "\n")
-        print("file written to " + path_to_write_file)
+        if verbose:
+            print("file written to " + path_to_write_file)
 
     def _complement(self) -> fractions.Fraction:
         """Return 2 / self.ratio (the octave complement)."""

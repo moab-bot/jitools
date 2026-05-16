@@ -98,13 +98,13 @@ Helmholtz-Ellis notation (text string, letter name): (':5v', 'E')
 
 ```
 
-Such reports can also be written to `txt` files. By default files are written to the user's current working directory, although the `output_directory` and `filename` can also be customized:
+Such reports can also be written to `txt` files. By default files are written to the user's current working directory, although a custom `output_path` can also be provided:
 
 ```python
 >>> test_pitch = jitools.Pitch(p=(17, 11))
 >>> test_pitch.write_info_to_txt()
-file written to /current/working/directory/pitch_info.txt
->>> test_pitch.write_info_to_txt(output_directory="/path/to/file", filename="myfile.txt")
+>>> test_pitch.write_info_to_txt(output_path="/path/to/file/myfile.txt")
+>>> test_pitch.write_info_to_txt(output_path="/path/to/file/myfile.txt", verbose=True)
 file written to /path/to/file/myfile.txt
 ```
 
@@ -210,7 +210,7 @@ normalized ratios: ['539/432', '7/4', '11/6', '77/39']
 
 FIRST-ORDER DIFFERENCE TONES
 ratios: ['5/24', '19/56', '23/56', '23/42', '3/4', '23/24']
-tuneable ratios: ['5/24', '3/4']
+tuneable ratios (vs. any ratio from original chord): ['5/24', '3/4']
 frequencies (Hz): ['91.66667', '149.28571', '180.71429', '240.95238', '330.0', '421.66667']
 MIDI key numbers: ['41.84359', '50.28687', '53.59448', '58.57493', '64.01955', '68.26319']
 Helmholtz-Ellis notations (text string, letter name): [('u', 'F'), ('/>', 'D'), ('3>v', 'E'), ('3>v', 'A'), ('n', 'E'), ('3v', 'G')]
@@ -218,7 +218,7 @@ Helmholtz-Ellis notations (text string, letter name): [('u', 'F'), ('/>', 'D'), 
 
 FIRST-ORDER SUMMATION TONES
 ratios: ['121/56', '5/2', '65/24', '163/56', '131/42', '83/24']
-tuneable ratios: ['5/2', '65/24']
+tuneable ratios (vs. any ratio from original chord): ['5/2', '65/24']
 frequencies (Hz): ['950.71429', '1100.0', '1191.66667', '1280.71429', '1372.38095', '1521.66667']
 MIDI key numbers: ['82.3381', '84.86314', '86.24886', '87.49648', '88.69327', '90.48092']
 Helmholtz-Ellis notations (text string, letter name): [('44>', 'A'), ('u', 'C'), ('0u', 'D'), ('undefined', 'undefined'), ('undefined', 'undefined'), ('undefined', 'undefined')]
@@ -238,9 +238,7 @@ reference frequency: 440.0 Hz
 ```python
 >>> test_chord = jitools.PitchCollection([(9, 4), (15, 48), (21, 17)])
 >>> test_chord.write_info_to_txt()
-file written to /current/working/directory/pitch_collection_info.txt
 >>> test_chord.write_info_to_csv()
-file written to /current/working/directory/pitch_collection_info.csv
 ```
 
 ## Enharmonic Search
@@ -313,9 +311,8 @@ enharmonic interval size (cents): -0.58462
 ... (4 more)
 
 >>> test_pitch.write_enharmonics_info_to_txt()
-file written to /current/working/directory/enharmonic_candidates.txt
 >>> test_pitch.write_enharmonics_info_to_csv()
-file written to /current/working/directory/enharmonic_candidates.csv
+
 ```
 
 Various constraints on an enharmonic search may be customized, including:
@@ -388,13 +385,11 @@ enharmonic interval size (cents): -0.17481
 The enharmonic search uses a prebuilt CSV table that ships with the library. You can generate a custom table using `jitools.generate_enharmonic_lookup_table()` — for example, to extend the symbol limit, restrict the prime range, or save the results for repeated use:
 
 ```python
->>> from jitools import generate_enharmonic_lookup_table
->>> results = generate_enharmonic_lookup_table(
+>>> results = jitools.generate_enharmonic_lookup_table(
 ...     max_symbols=2,
 ...     max_prime_3=70,
 ...     max_prime_5=4,
 ...     output_path="/path/to/my_table.csv",
-...     workers=1,    # use workers=1 in Jupyter notebooks
 ...     verbose=True
 ... )
 ```

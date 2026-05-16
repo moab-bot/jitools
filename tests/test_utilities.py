@@ -1,7 +1,16 @@
 import fractions
 import math
 import pytest
+import jitools
 from jitools import utilities_general, utilities_music
+
+
+# ── package metadata ──────────────────────────────────────────────────────────
+
+def test_version_is_defined():
+    assert hasattr(jitools, "__version__")
+    assert isinstance(jitools.__version__, str)
+    assert jitools.__version__ != "unknown"
 
 
 # ── utilities_general ─────────────────────────────────────────────────────────
