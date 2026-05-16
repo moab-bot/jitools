@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="jitools",
-    version="1.1.0",
+    version="1.1.1",
     license="GNU GPLv3",
     author="M.O. Abbott",
     author_email="moab_bot@protonmail.com",

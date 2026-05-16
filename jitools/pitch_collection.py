@@ -95,6 +95,9 @@ class PitchCollection():
                 else 1 - self.harmonic_intersection
             )
 
+    def __repr__(self) -> str:
+        return f"PitchCollection([{', '.join(str(r) for r in self.ratios)}])"
+
     def print_info(self, variety: str = "basic") -> None:
         """Print a formatted report of collection attributes.
 

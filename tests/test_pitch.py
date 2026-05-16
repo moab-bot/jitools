@@ -1,6 +1,9 @@
+import ast
+import csv
 import fractions
 import math
 import pytest
+from jitools import constants
 from jitools.pitch import Pitch
 
 
@@ -406,6 +409,20 @@ class TestEnharmonics:
         returned_ratios = [e[0] for e in result]
         assert p.ratio not in returned_ratios
 
+    def test_lookup_table_accepts_path_string(self):
+        bundled = constants.RESOURCES_DIRECTORY + "/enharmonic_lookup_table.csv"
+        result_default = Pitch(p=(81, 80)).get_enharmonics()
+        result_path = Pitch(p=(81, 80)).get_enharmonics(lookup_table=bundled)
+        assert result_path == result_default
+
+    def test_lookup_table_accepts_list(self):
+        bundled = constants.RESOURCES_DIRECTORY + "/enharmonic_lookup_table.csv"
+        with open(bundled, newline="") as f:
+            table_as_list = [(ast.literal_eval(row[0]), float(row[1])) for row in csv.reader(f)]
+        result_default = Pitch(p=(81, 80)).get_enharmonics()
+        result_list = Pitch(p=(81, 80)).get_enharmonics(lookup_table=table_as_list)
+        assert result_list == result_default
+
 
 # ── file I/O ──────────────────────────────────────────────────────────────────
 
@@ -428,3 +445,10 @@ class TestFileIO:
         monkeypatch.setenv("HOME", str(tmp_path))
         Pitch(p=(81, 80)).write_enharmonics_info_to_txt(output_path="~/enh.txt")
         assert (tmp_path / "enh.txt").exists()
+
+    def test_write_enharmonics_info_to_csv_no_leading_space(self, tmp_path):
+        path = str(tmp_path / "enh.csv")
+        Pitch(p=(81, 80)).write_enharmonics_info_to_csv(output_path=path)
+        with open(path, newline="") as f:
+            first_line = f.readline()
+        assert first_line.startswith(",")

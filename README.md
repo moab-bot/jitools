@@ -239,6 +239,8 @@ reference frequency: 440.0 Hz
 >>> test_chord = jitools.PitchCollection([(9, 4), (15, 48), (21, 17)])
 >>> test_chord.write_info_to_txt()
 >>> test_chord.write_info_to_csv()
+>>> test_chord.write_info_to_txt(output_path="/path/to/file/my_chord.txt", verbose=True)
+file written to /path/to/file/my_chord.txt
 ```
 
 ## Enharmonic Search
@@ -312,6 +314,8 @@ enharmonic interval size (cents): -0.58462
 
 >>> test_pitch.write_enharmonics_info_to_txt()
 >>> test_pitch.write_enharmonics_info_to_csv()
+>>> test_pitch.write_enharmonics_info_to_txt(output_path="/path/to/file/myenharmonics.txt", verbose=True)
+file written to /path/to/file/myenharmonics.txt
 
 ```
 
@@ -322,7 +326,7 @@ Various constraints on an enharmonic search may be customized, including:
 - `exclude_primes`: prime factors to be excluded, as a list (default = [])
 - `max_symbols`: maximum number of HEJI2 symbols (default = 2)
 - `max_candidates`: maximum number of results to return (default = 10)
-- `lookup_table_path`: path to a custom lookup table CSV (default = None, uses the table shipped with the library)
+- `lookup_table`: custom lookup table, as a file path (`str`) or the list returned by `generate_enharmonic_lookup_table()` (default = None, uses the table shipped with the library)
 
 The `sort_by` parameter can also be changed. The default is `"tolerance"`, which orders results by how closely they match the pitch height of the original pitch. Results may also be sorted by `"harmonic distance"`, a measure developed by James Tenney which generally correlates to interval/ratio simplicity. (See **[Nicholson/Sabat](https://masa.plainsound.org/pdfs/JI.pdf)**, p. 26-28, for more information about harmonic distance and other metrics invented by Tenney.)
 
@@ -382,23 +386,28 @@ enharmonic interval size (cents): -0.17481
 
 ## Generating a Custom Lookup Table
 
-The enharmonic search uses a prebuilt CSV table that ships with the library. You can generate a custom table using `jitools.generate_enharmonic_lookup_table()` — for example, to extend the symbol limit, restrict the prime range, or save the results for repeated use:
+The enharmonic search uses a prebuilt CSV table that ships with the library. You can generate a custom table using `jitools.generate_enharmonic_lookup_table()` — for example, to extend the symbol limit or restrict the prime range:
 
 ```python
 >>> results = jitools.generate_enharmonic_lookup_table(
 ...     max_symbols=2,
 ...     max_prime_3=70,
 ...     max_prime_5=4,
-...     output_path="/path/to/my_table.csv",
-...     verbose=True
+...     output_path="/path/to/my_table.csv"
 ... )
 ```
 
-The generated CSV can then be passed to any enharmonic method via `lookup_table_path`:
+By default, the table is written to `jitools_lookup_table.csv` in the current working directory. The result can then be passed directly to any enharmonic method, or saved to disk and referenced by path in a later session:
 
 ```python
+# pass the result directly (same session)
+>>> results = jitools.generate_enharmonic_lookup_table(output_path="/path/to/my_table.csv")
 >>> test_pitch = jitools.Pitch(p=(81, 64))
->>> test_pitch.print_enharmonics_info(tolerance=5, lookup_table_path="/path/to/my_table.csv")
+>>> test_pitch.print_enharmonics_info(tolerance=5, lookup_table=results)
+
+# reference by path (later session)
+>>> my_table = "/path/to/my_table.csv"
+>>> test_pitch.print_enharmonics_info(tolerance=5, lookup_table=my_table)
 ```
 
 Parameters for `generate_enharmonic_lookup_table()`:
@@ -406,9 +415,9 @@ Parameters for `generate_enharmonic_lookup_table()`:
 - `max_symbols`: maximum number of accidental characters (default = 3)
 - `max_prime_3`: search bound for the prime-3 exponent, range is ±max_prime_3 (default = 70)
 - `max_prime_5`: search bound for the prime-5 exponent, range is ±max_prime_5 (default = 4)
-- `output_path`: if provided, write results to a CSV file at this path
+- `output_path`: path to write the results CSV (default = `"jitools_lookup_table.csv"` in the current working directory)
 - `workers`: number of worker processes (default = cpu_count − 1; pass `workers=1` to disable multiprocessing)
-- `verbose`: print progress to stdout (default = False)
+- `verbose`: print progress to stdout (default = True)
 
 ## State of the Project
 

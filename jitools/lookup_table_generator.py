@@ -2,6 +2,7 @@ from __future__ import annotations
 import csv
 import math
 import multiprocessing
+import os
 import time
 from itertools import combinations
 
@@ -87,9 +88,9 @@ def generate_enharmonic_lookup_table(
         max_symbols: int = 3,
         max_prime_3: int = 70,
         max_prime_5: int = 4,
-        output_path: str | None = None,
+        output_path: str = "jitools_lookup_table.csv",
         workers: int | None = None,
-        verbose: bool = False) -> list[tuple[list[int], float]]:
+        verbose: bool = True) -> list[tuple[list[int], float]]:
     """Generate a table of JI intervals with valid HEJI2 notation.
 
     Parameters
@@ -100,14 +101,15 @@ def generate_enharmonic_lookup_table(
         Search bound for the prime-3 exponent; range is ±max_prime_3.
     max_prime_5 : int
         Search bound for the prime-5 exponent; range is ±max_prime_5.
-    output_path : str or None
-        If provided, write results to a CSV file at this path.
+    output_path : str
+        Path to write the results CSV (default "jitools_lookup_table.csv" in the
+        current working directory).
     workers : int or None
         Number of worker processes. Defaults to cpu_count - 1. Pass workers=1
         to disable multiprocessing entirely, which is useful in Jupyter notebooks,
         frozen/embedded environments, or anywhere subprocess spawning is unreliable.
     verbose : bool
-        Print progress to stdout.
+        Print progress to stdout (default True).
 
     Returns
     -------
@@ -149,10 +151,12 @@ def generate_enharmonic_lookup_table(
     if verbose:
         print(f"  {len(results):,} entries in {time.time() - t0:.1f}s")
 
-    if output_path is not None:
-        with open(output_path, "w", newline="") as f:
-            writer = csv.writer(f)
-            for monzo, pc in results:
-                writer.writerow([str(monzo), pc])
+    path_to_write = os.path.expanduser(output_path)
+    with open(path_to_write, "w", newline="") as f:
+        writer = csv.writer(f)
+        for monzo, pc in results:
+            writer.writerow([str(monzo), pc])
+    if verbose:
+        print(f"  table written to {path_to_write}")
 
     return results

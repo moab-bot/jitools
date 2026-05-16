@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0 (2026-05-15)
+## 1.1.1 (2026-05-16)
 
 ### Breaking changes
 - `Pitch.write_info_to_txt`, `Pitch.write_enharmonics_info_to_txt`, `Pitch.write_enharmonics_info_to_csv`,
@@ -9,15 +9,27 @@
   `output_path="~/Desktop/myfile.txt"`), consistent with `generate_enharmonic_lookup_table` and
   standard Python file I/O conventions.
 - All five write methods now default to silent output. Pass `verbose=True` to print the path of the
-  written file, consistent with the existing behaviour of `generate_enharmonic_lookup_table`.
+  written file.
+- `Pitch.get_enharmonics`, `Pitch.print_enharmonics_info`, `Pitch.write_enharmonics_info_to_csv`,
+  and `Pitch.write_enharmonics_info_to_txt`: the `lookup_table_path` parameter has been renamed to
+  `lookup_table` and now accepts either a file path (`str`) or the list returned by
+  `generate_enharmonic_lookup_table()`, allowing the generated table to be passed directly without
+  a round-trip through disk.
 
 ### Bug fixes
 - All write methods now correctly expand `~` in `output_path` (e.g. `"~/Desktop/myfile.txt"`).
 
 ### New features
+- `Pitch` and `PitchCollection` now have a `__repr__` method, so evaluating an instance
+  in the console returns a readable representation (e.g. `Pitch(4/7)`,
+  `PitchCollection([1/1, 5/4, 3/2])`) rather than the default Python object address.
 - `jitools.__version__` is now available after `import jitools`, returning the installed package version.
 
 ### Other changes
+- `generate_enharmonic_lookup_table`: `output_path` now defaults to `"jitools_lookup_table.csv"`
+  (written to the current working directory); `verbose` now defaults to `True`. Previously
+  `output_path` defaulted to `None` (no file written), but since a saved file is required to use
+  the result with any enharmonic method, a default path was added.
 - `PitchCollection.print_info` and `PitchCollection.write_info_to_txt`: the `tuneable ratios:` label
   in difference and summation tone sections is now `tuneable ratios (vs. any ratio from original chord):`
   to clarify that tuneability is assessed relative to the original chord pitches, not the resultant

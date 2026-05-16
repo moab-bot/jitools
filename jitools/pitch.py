@@ -137,6 +137,9 @@ class Pitch():
             output = basic_info_strings + normalized_info_strings[1:] + reference_info_strings[1:]
         return(output)
 
+    def __repr__(self) -> str:
+        return f"Pitch({self.ratio})"
+
     def get_enharmonics(
         self,
         tolerance: float = 1.95,
@@ -146,7 +149,7 @@ class Pitch():
         max_hd: float = 30,
         max_candidates: int = 10,
         sort_by: str = "tolerance",
-        lookup_table_path: str | None = None) -> list[list]:
+        lookup_table: str | list | None = None) -> list[list]:
         """Return ratios enharmonically close to this pitch.
 
         Args:
@@ -157,8 +160,9 @@ class Pitch():
             max_hd: Maximum harmonic distance for candidates (default 30).
             max_candidates: Maximum number of results to return (default 10).
             sort_by: Order results by "tolerance" or "harmonic distance" (default "tolerance").
-            lookup_table_path: Path to a custom CSV lookup table. Uses the bundled
-                table if None.
+            lookup_table: Custom lookup table, as either a file path (str) or the list
+                returned by generate_enharmonic_lookup_table(). Uses the bundled table
+                if None.
 
         Returns:
             List of [ratio, cent_delta, harmonic_distance, enharmonic_interval] entries.
@@ -169,12 +173,13 @@ class Pitch():
         fund_offset = self._fund_offset
         vector_primes = self._vector_primes
         reference_pc_height = Pitch(p = self.normalized_monzo, rp = self.reference_pitch, rf = self.reference_freq).distance_in_cents_from_reference % 1200.0
-        if lookup_table_path is None:
-            lookup_table_path = constants.RESOURCES_DIRECTORY + "/enharmonic_lookup_table.csv"
-        path_to_lookup_table = lookup_table_path
-        with open(path_to_lookup_table, newline="") as f:
-            reader = csv.reader(f)
-            data = list(reader)
+        if isinstance(lookup_table, list):
+            data = [[str(monzo), str(pc)] for monzo, pc in lookup_table]
+        else:
+            path = lookup_table if lookup_table is not None else constants.RESOURCES_DIRECTORY + "/enharmonic_lookup_table.csv"
+            with open(path, newline="") as f:
+                reader = csv.reader(f)
+                data = list(reader)
         min_candidate_pc_height = (reference_pc_height - tolerance) % 1200.0
         max_candidate_pc_height = (reference_pc_height + tolerance) % 1200.0
         starting_index_orientation = False
@@ -317,7 +322,7 @@ class Pitch():
         max_hd: float = 30,
         max_candidates: int = 10,
         sort_by: str = "tolerance",
-        lookup_table_path: str | None = None) -> None:
+        lookup_table: str | list | None = None) -> None:
         """Print a formatted enharmonic search report. See get_enharmonics() for parameter descriptions."""
         enharmonics_info = self.get_enharmonics(
             tolerance = tolerance,
@@ -327,7 +332,7 @@ class Pitch():
             max_hd = max_hd,
             max_candidates = max_candidates,
             sort_by = sort_by,
-            lookup_table_path = lookup_table_path)
+            lookup_table = lookup_table)
         num_enharmonics = len(enharmonics_info)
         header_strings = self._create_strings_for_enharmonics_header(
                 tolerance = tolerance,
@@ -374,7 +379,7 @@ class Pitch():
         max_candidates: int = 10,
         sort_by: str = "tolerance",
         output_path: str = "enharmonic_candidates.csv",
-        lookup_table_path: str | None = None,
+        lookup_table: str | list | None = None,
         verbose: bool = False) -> None:
         """Write an enharmonic search report to a CSV file.
 
@@ -383,6 +388,9 @@ class Pitch():
         Args:
             output_path: Path to the output file (default "enharmonic_candidates.csv",
                 written to the current working directory). Supports ~ expansion.
+            lookup_table: Custom lookup table, as either a file path (str) or the list
+                returned by generate_enharmonic_lookup_table(). Uses the bundled table
+                if None.
             verbose: If True, print the path of the written file (default False).
         """
         enharmonics_info = self.get_enharmonics(
@@ -393,7 +401,7 @@ class Pitch():
             max_hd = max_hd,
             max_candidates = max_candidates,
             sort_by = sort_by,
-            lookup_table_path = lookup_table_path)
+            lookup_table = lookup_table)
         num_enharmonics = len(enharmonics_info)
         header_strings = self._create_strings_for_enharmonics_header(
             tolerance = tolerance,
@@ -406,8 +414,8 @@ class Pitch():
             num_qualified_candidates = num_enharmonics)
         formatted_header = []
         for x in header_strings:
-            formatted_header.append([" ", x])
-        formatted_header.append(" ")
+            formatted_header.append(["", x])
+        formatted_header.append([""])
         final_info = formatted_header
         path_to_write_file = os.path.expanduser(output_path)
         if num_enharmonics > 0:
@@ -464,7 +472,7 @@ class Pitch():
         max_candidates: int = 10,
         sort_by: str = "tolerance",
         output_path: str = "enharmonic_candidates.txt",
-        lookup_table_path: str | None = None,
+        lookup_table: str | list | None = None,
         verbose: bool = False) -> None:
         """Write an enharmonic search report to a text file.
 
@@ -473,6 +481,9 @@ class Pitch():
         Args:
             output_path: Path to the output file (default "enharmonic_candidates.txt",
                 written to the current working directory). Supports ~ expansion.
+            lookup_table: Custom lookup table, as either a file path (str) or the list
+                returned by generate_enharmonic_lookup_table(). Uses the bundled table
+                if None.
             verbose: If True, print the path of the written file (default False).
         """
         enharmonics_info = self.get_enharmonics(
@@ -483,7 +494,7 @@ class Pitch():
             max_hd = max_hd,
             max_candidates = max_candidates,
             sort_by = sort_by,
-            lookup_table_path = lookup_table_path)
+            lookup_table = lookup_table)
         num_enharmonics = len(enharmonics_info)
         header_strings = self._create_strings_for_enharmonics_header(
             tolerance = tolerance,

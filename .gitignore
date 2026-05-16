@@ -5,3 +5,10 @@
 dist/
 build/
 .claude/
+# default output filenames from write methods
+enharmonic_candidates.csv
+enharmonic_candidates.txt
+pitch_collection_info.csv
+pitch_collection_info.txt
+pitch_info.txt
+jitools_lookup_table.csv
