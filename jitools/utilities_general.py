@@ -1,15 +1,14 @@
 from __future__ import annotations
 import math
 from fractions import Fraction
-from functools import reduce
 
 def tuple_to_fraction(t: tuple[int, int]) -> Fraction:
     f = Fraction(t[0], t[1])
-    return(f)
+    return f
 
 def tuples_to_fractions(tuples: list[tuple[int, int]]) -> list[Fraction]:
     output = [tuple_to_fraction(x) for x in tuples]
-    return(output)
+    return output
 
 def flop(lists: list[list]) -> list[list]:
     """Transpose a list-of-lists (rows→columns), truncating to the shortest row."""
@@ -23,11 +22,7 @@ def flop(lists: list[list]) -> list[list]:
         for row in lists:
             col.append(row[i])
         final.append(col)
-    return(final)
-
-def lcm(list_of_integers: list[int]) -> int:
-    output = reduce(lambda x, y: x * y // math.gcd(x, y), list_of_integers)
-    return(output)
+    return final
 
 def convert_data_to_readable_string(d: int | float | Fraction, precision: int = 5, prefix: str | None = None, suffix: str | None = None) -> str:
     """Format d as a string, rounding floats to precision decimal places."""
@@ -41,4 +36,4 @@ def convert_data_to_readable_string(d: int | float | Fraction, precision: int = 
         formatted_string = prefix + formatted_string
     if suffix is not None:
         formatted_string = formatted_string + suffix
-    return(formatted_string)
+    return formatted_string

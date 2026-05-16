@@ -103,9 +103,9 @@ Such reports can also be written to `txt` files. By default files are written to
 ```python
 >>> test_pitch = jitools.Pitch(p=(17, 11))
 >>> test_pitch.write_info_to_txt()
->>> test_pitch.write_info_to_txt(output_path="/path/to/file/myfile.txt")
->>> test_pitch.write_info_to_txt(output_path="/path/to/file/myfile.txt", verbose=True)
-file written to /path/to/file/myfile.txt
+>>> test_pitch.write_info_to_txt(output_path="/path/to/file/my_pitch.txt")
+>>> test_pitch.write_info_to_txt(output_path="/path/to/file/my_pitch.txt", verbose=True)
+file written to /path/to/file/my_pitch.txt
 ```
 
 ## jitools.PitchCollection()
@@ -314,8 +314,8 @@ enharmonic interval size (cents): -0.58462
 
 >>> test_pitch.write_enharmonics_info_to_txt()
 >>> test_pitch.write_enharmonics_info_to_csv()
->>> test_pitch.write_enharmonics_info_to_txt(output_path="/path/to/file/myenharmonics.txt", verbose=True)
-file written to /path/to/file/myenharmonics.txt
+>>> test_pitch.write_enharmonics_info_to_txt(output_path="/path/to/file/my_enharmonics.txt", verbose=True)
+file written to /path/to/file/my_enharmonics.txt
 
 ```
 
@@ -393,7 +393,7 @@ The enharmonic search uses a prebuilt CSV table that ships with the library. You
 ...     max_symbols=2,
 ...     max_prime_3=70,
 ...     max_prime_5=4,
-...     output_path="/path/to/my_table.csv"
+...     output_path="/path/to/my_lookup_table.csv"
 ... )
 ```
 
@@ -401,12 +401,12 @@ By default, the table is written to `jitools_lookup_table.csv` in the current wo
 
 ```python
 # pass the result directly (same session)
->>> results = jitools.generate_enharmonic_lookup_table(output_path="/path/to/my_table.csv")
+>>> results = jitools.generate_enharmonic_lookup_table(output_path="/path/to/my_lookup_table.csv")
 >>> test_pitch = jitools.Pitch(p=(81, 64))
 >>> test_pitch.print_enharmonics_info(tolerance=5, lookup_table=results)
 
 # reference by path (later session)
->>> my_table = "/path/to/my_table.csv"
+>>> my_table = "/path/to/my_lookup_table.csv"
 >>> test_pitch.print_enharmonics_info(tolerance=5, lookup_table=my_table)
 ```
 

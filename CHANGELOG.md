@@ -18,6 +18,8 @@
 
 ### Bug fixes
 - All write methods now correctly expand `~` in `output_path` (e.g. `"~/Desktop/myfile.txt"`).
+- `Pitch.write_enharmonics_info_to_csv`: when the search returns zero candidates, no file is written;
+  `verbose=True` no longer incorrectly prints "file written to ..." in that case.
 
 ### New features
 - `Pitch` and `PitchCollection` now have a `__repr__` method, so evaluating an instance

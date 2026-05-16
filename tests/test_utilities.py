@@ -48,7 +48,8 @@ class TestLcm:
         ([6],           6),
     ])
     def test_known_values(self, lst, expected):
-        assert utilities_general.lcm(lst) == expected
+        import math
+        assert math.lcm(*lst) == expected
 
 
 class TestFlop:

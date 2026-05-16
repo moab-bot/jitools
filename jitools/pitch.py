@@ -54,7 +54,7 @@ class Pitch():
         self.reference_freq = rf
         self.precision = precision
         self._vector_primes = DEFAULT_MONZO_PRIMES
-        self.rk_and_fo = self._reference_keynum_and_fund_offset_from_pitch_letter_name_and_octave()
+        self.rk_and_fo = self._parse_reference_pitch()
         if self.rk_and_fo is None:
             raise ValueError(
                 f"rp {rp!r} is not a recognized pitch name. "
@@ -135,7 +135,7 @@ class Pitch():
             output = reference_info_strings
         elif variety == "all":
             output = basic_info_strings + normalized_info_strings[1:] + reference_info_strings[1:]
-        return(output)
+        return output
 
     def __repr__(self) -> str:
         return f"Pitch({self.ratio})"
@@ -182,126 +182,67 @@ class Pitch():
                 data = list(reader)
         min_candidate_pc_height = (reference_pc_height - tolerance) % 1200.0
         max_candidate_pc_height = (reference_pc_height + tolerance) % 1200.0
-        starting_index_orientation = False
-        if min_candidate_pc_height > max_candidate_pc_height:
-            index_of_candidate = 0
-            starting_index_orientation = "within tolerance"
-        else:
-            index_of_candidate = round((min_candidate_pc_height / 1200.0) * len(data))
-        candidate_data = data[index_of_candidate]
-        candidate_pc_height = ast.literal_eval(candidate_data[1])
-        if not starting_index_orientation:
-            if candidate_pc_height <= reference_pc_height:
-                starting_index_orientation = "ascend only"
-            elif candidate_pc_height >= reference_pc_height:
-                starting_index_orientation = "descend only"
-            else:
-                starting_index_orientation = "within tolerance"
-                        
-        def get_enharmonics_from_span(orientation):
-            nonlocal candidate_pc_height
-            nonlocal index_of_candidate
-            nonlocal min_candidate_pc_height
-            nonlocal max_candidate_pc_height
-                    
-            if orientation == "ascend":
-                def while_condition():
-                    nonlocal candidate_pc_height
-                    nonlocal max_candidate_pc_height
-                    return(candidate_pc_height <= max_candidate_pc_height)
-                incr_value = 1
-                def break_condition():
-                    nonlocal candidate_pc_height
-                    nonlocal max_candidate_pc_height
-                    return(candidate_pc_height > max_candidate_pc_height)
-            else:
-                def while_condition():
-                    nonlocal candidate_pc_height
-                    nonlocal min_candidate_pc_height
-                    return(candidate_pc_height >= min_candidate_pc_height)
-                incr_value = -1
-                def break_condition():
-                    nonlocal candidate_pc_height
-                    nonlocal min_candidate_pc_height
-                    return(candidate_pc_height < min_candidate_pc_height)
-                        
-            if max_candidate_pc_height < min_candidate_pc_height:
-                def range_condition():
-                    nonlocal candidate_pc_height
-                    nonlocal min_candidate_pc_height
-                    nonlocal max_candidate_pc_height
-                    return( ((candidate_pc_height - 1200.0) <= max_candidate_pc_height and candidate_pc_height >= min_candidate_pc_height) or (candidate_pc_height <= max_candidate_pc_height and (candidate_pc_height + 1200.0) >= min_candidate_pc_height))
-            else:
-                def range_condition():
-                    nonlocal candidate_pc_height
-                    nonlocal min_candidate_pc_height
-                    nonlocal max_candidate_pc_height
-                    return(candidate_pc_height <= max_candidate_pc_height and candidate_pc_height >= min_candidate_pc_height)
-                    
-            while while_condition():
-                candidate_data = data[index_of_candidate]
-                candidate_pc_height = ast.literal_eval(candidate_data[1])
-                if range_condition():
-                    limit_ok = True
-                    candidate_monzo = ast.literal_eval(candidate_data[0])
+        wraps_around = max_candidate_pc_height < min_candidate_pc_height
+
+        def in_range(pc):
+            if wraps_around:
+                return (pc - 1200.0) <= max_candidate_pc_height and pc >= min_candidate_pc_height \
+                    or pc <= max_candidate_pc_height and (pc + 1200.0) >= min_candidate_pc_height
+            return min_candidate_pc_height <= pc <= max_candidate_pc_height
+
+        def scan(start_index, step):
+            idx = start_index
+            while 0 <= idx < len(data):
+                pc = ast.literal_eval(data[idx][1])
+                if step == 1 and pc > max_candidate_pc_height:
+                    break
+                if step == -1 and pc < min_candidate_pc_height:
+                    break
+                if in_range(pc):
+                    candidate_monzo = ast.literal_eval(data[idx][0])
                     max_prime_index = vector_primes.index(limit)
-                    for i in range(max_prime_index + 1, len(candidate_monzo)):
-                        if candidate_monzo[i] != 0:
-                            limit_ok = False
-                    forbidden_prime_indices = [vector_primes.index(i) for i in exclude_primes]
-                    for i in forbidden_prime_indices:
-                        if i < len(candidate_monzo) and candidate_monzo[i] != 0:
-                            limit_ok = False
+                    limit_ok = all(candidate_monzo[i] == 0 for i in range(max_prime_index + 1, len(candidate_monzo)))
                     if limit_ok:
-                        if abs(candidate_pc_height - reference_pc_height) > tolerance:
-                            if candidate_pc_height > reference_pc_height:
-                                candidate_monzo[0] = candidate_monzo[0] - 1
-                            else:
-                                candidate_monzo[0] = candidate_monzo[0] + 1
-                        candidate_original_octave_difference = round((self.distance_in_cents_from_reference - reference_pc_height) / 1200)
-                        candidate_monzo[0] = candidate_monzo[0] + candidate_original_octave_difference
-                        candidate_pci = Pitch(p = candidate_monzo, rp = self.reference_pitch, rf = self.reference_freq)
+                        forbidden = [vector_primes.index(p) for p in exclude_primes]
+                        limit_ok = all(i >= len(candidate_monzo) or candidate_monzo[i] == 0 for i in forbidden)
+                    if limit_ok:
+                        if abs(pc - reference_pc_height) > tolerance:
+                            candidate_monzo[0] += -1 if pc > reference_pc_height else 1
+                        octave_diff = round((self.distance_in_cents_from_reference - reference_pc_height) / 1200)
+                        candidate_monzo[0] += octave_diff
+                        candidate_pci = Pitch(p=candidate_monzo, rp=self.reference_pitch, rf=self.reference_freq)
                         if candidate_pci.ratio != self.ratio:
                             candidate_hd = candidate_pci.harmonic_distance
                             if candidate_hd <= max_hd:
-                                candidate_num_symbols = candidate_pci.num_symbols
-                                enharmonic_difference = round(candidate_pci.distance_in_cents_from_reference - self.distance_in_cents_from_reference, self.precision)
-                                if candidate_num_symbols <= max_symbols:
-                                    formatted_candidate = [candidate_pci.ratio, enharmonic_difference, candidate_hd, abs(enharmonic_difference)]
-                                    possible_enharmonics.append(formatted_candidate)
-                index_of_candidate = index_of_candidate + incr_value
-                if break_condition():                                               
-                    break
+                                enharmonic_difference = round(
+                                    candidate_pci.distance_in_cents_from_reference - self.distance_in_cents_from_reference,
+                                    self.precision)
+                                if candidate_pci.num_symbols <= max_symbols:
+                                    possible_enharmonics.append(
+                                        [candidate_pci.ratio, enharmonic_difference, candidate_hd, abs(enharmonic_difference)])
+                idx += step
 
-        if starting_index_orientation == "ascend only":
-            get_enharmonics_from_span("ascend")
-        elif starting_index_orientation == "descend only":
-            get_enharmonics_from_span("descend")
-        if starting_index_orientation == "within tolerance":
-            ascending_index = index_of_candidate + 0
-            index_of_candidate -= 1
-            if index_of_candidate == 0:
-                candidate_pc_height = 1200.0
+        if wraps_around:
+            scan(0, 1)
+        else:
+            start = round((min_candidate_pc_height / 1200.0) * len(data))
+            pc_at_start = ast.literal_eval(data[start][1])
+            if pc_at_start <= reference_pc_height:
+                scan(start, 1)
+            elif pc_at_start >= reference_pc_height:
+                scan(start, -1)
             else:
-                candidate_data = data[index_of_candidate]
-                candidate_pc_height = ast.literal_eval(candidate_data[1])
-            get_enharmonics_from_span("descend")
-            index_of_candidate = ascending_index
-            candidate_data = data[index_of_candidate]
-            candidate_pc_height = ast.literal_eval(candidate_data[1])
-            get_enharmonics_from_span("ascend")
-        if len(possible_enharmonics) > 0:
+                scan(start - 1, -1)
+                scan(start, 1)
+        if possible_enharmonics:
             if sort_by == "harmonic distance":
-                possible_enharmonics.sort(key=lambda x: x[3])
-                possible_enharmonics.sort(key=lambda x: x[2])
+                possible_enharmonics.sort(key=lambda x: (x[2], x[3]))
             else:
-                possible_enharmonics.sort(key=lambda x: x[2])
-                possible_enharmonics.sort(key=lambda x: x[3])
+                possible_enharmonics.sort(key=lambda x: (x[3], x[2]))
         possible_enharmonics = possible_enharmonics[:max_candidates]
-        if len(possible_enharmonics) > 0:
-            for x in possible_enharmonics:
-                x[3] =  self.ratio / x[0]
-        return(possible_enharmonics)
+        for x in possible_enharmonics:
+            x[3] = self.ratio / x[0]
+        return possible_enharmonics
         
     def print_info(self, variety: str = "basic") -> None:
         """Print a formatted report of pitch attributes.
@@ -393,72 +334,33 @@ class Pitch():
                 if None.
             verbose: If True, print the path of the written file (default False).
         """
-        enharmonics_info = self.get_enharmonics(
-            tolerance = tolerance,
-            limit = limit,
-            exclude_primes = exclude_primes,
-            max_symbols = max_symbols,
-            max_hd = max_hd,
-            max_candidates = max_candidates,
-            sort_by = sort_by,
-            lookup_table = lookup_table)
-        num_enharmonics = len(enharmonics_info)
-        header_strings = self._create_strings_for_enharmonics_header(
-            tolerance = tolerance,
-            limit = limit,
-            exclude_primes = exclude_primes,
-            max_symbols = max_symbols,
-            max_hd = max_hd,
-            max_candidates = max_candidates,
-            sort_by = sort_by,
-            num_qualified_candidates = num_enharmonics)
-        formatted_header = []
-        for x in header_strings:
-            formatted_header.append(["", x])
-        formatted_header.append([""])
-        final_info = formatted_header
+        enharmonics_info, header_strings = self._enharmonics_search_results(
+            tolerance, limit, exclude_primes, max_symbols, max_hd, max_candidates, sort_by, lookup_table)
+        if not enharmonics_info:
+            return
+        formatted_header = [["", s] for s in header_strings] + [[""]]
+        data_types = ["", "ratio", "monzo", "freq (Hz)", "keynum", "primes",
+                      "hd", "HEJI", "12-ED2", "mel. ratio", "enh. size (cents)"]
+        processed_info = []
+        for count, x in enumerate(enharmonics_info, start=1):
+            ratio, delta, _, ei = x
+            enh = Pitch(p=(ratio.numerator, ratio.denominator),
+                        rp=self.reference_pitch, rf=self.reference_freq, precision=self.precision)
+            processed_info.append([count,
+                f"'{enh.ratio}'",
+                str(enh.monzo),
+                utilities_general.convert_data_to_readable_string(enh.freq, precision=self.precision),
+                utilities_general.convert_data_to_readable_string(enh.keynum, precision=self.precision),
+                str(enh.constituent_primes),
+                utilities_general.convert_data_to_readable_string(enh.harmonic_distance, precision=self.precision),
+                str(enh.notation),
+                f"'{enh.letter_name_and_octave_and_cents}'",
+                self._fraction_to_proportional_ratio_string(ei),
+                str(delta)])
         path_to_write_file = os.path.expanduser(output_path)
-        if num_enharmonics > 0:
-            data_types = [
-                "", 
-                "ratio", 
-                "monzo", 
-                "freq (Hz)", 
-                "keynum", 
-                "primes", 
-                "hd", 
-                "HEJI", 
-                "12-ED2", 
-                "mel. ratio", 
-                "enh. size (cents)"]
-            count = 0
-            processed_info = []
-            for x in enharmonics_info:
-                count += 1
-                ratio = x[0]
-                delta = x[1]
-                ei = x[3]
-                enharmonic_ici = Pitch(
-                    p = (ratio.numerator, ratio.denominator), 
-                    rp = self.reference_pitch, 
-                    rf = self.reference_freq, 
-                    precision = self.precision)
-                stats_to_be_added = [count,
-                    "'" + str(enharmonic_ici.ratio) + "'",
-                    str(enharmonic_ici.monzo),
-                    utilities_general.convert_data_to_readable_string(enharmonic_ici.freq, precision = self.precision),
-                    utilities_general.convert_data_to_readable_string(enharmonic_ici.keynum, precision = self.precision),
-                    str(enharmonic_ici.constituent_primes),
-                    utilities_general.convert_data_to_readable_string(enharmonic_ici.harmonic_distance, precision = self.precision),
-                    str(enharmonic_ici.notation),
-                    "'" + str(enharmonic_ici.letter_name_and_octave_and_cents) + "'",
-                    str(self._fraction_to_proportional_ratio_string(ei)),
-                    str(delta)]
-                processed_info.append(stats_to_be_added)
-            final_info = formatted_header + [data_types] + processed_info
-            with open(path_to_write_file, "w") as output:
-                writer = csv.writer(output, lineterminator='\n')
-                writer.writerows(final_info)
+        with open(path_to_write_file, "w") as output:
+            writer = csv.writer(output, lineterminator='\n')
+            writer.writerows(formatted_header + [data_types] + processed_info)
         if verbose:
             print("file written to " + path_to_write_file)
 
@@ -486,34 +388,16 @@ class Pitch():
                 if None.
             verbose: If True, print the path of the written file (default False).
         """
-        enharmonics_info = self.get_enharmonics(
-            tolerance = tolerance,
-            limit = limit,
-            exclude_primes = exclude_primes,
-            max_symbols = max_symbols,
-            max_hd = max_hd,
-            max_candidates = max_candidates,
-            sort_by = sort_by,
-            lookup_table = lookup_table)
-        num_enharmonics = len(enharmonics_info)
-        header_strings = self._create_strings_for_enharmonics_header(
-            tolerance = tolerance,
-            limit = limit,
-            exclude_primes = exclude_primes,
-            max_symbols = max_symbols,
-            max_hd = max_hd,
-            max_candidates = max_candidates,
-            sort_by = sort_by,
-            num_qualified_candidates = num_enharmonics)
+        enharmonics_info, header_strings = self._enharmonics_search_results(
+            tolerance, limit, exclude_primes, max_symbols, max_hd, max_candidates, sort_by, lookup_table)
         path_to_write_file = os.path.expanduser(output_path)
         with open(path_to_write_file, "w") as output:
-            for x in header_strings:
-                output.write(x + "\n")
-            output.write(" \n")
-            if num_enharmonics > 0:
-                enharmonics_strings = self._create_strings_for_enharmonics_info(enharmonics_info)
-                for x in enharmonics_strings:
-                    output.write(x + "\n")
+            for s in header_strings:
+                output.write(s + "\n")
+            output.write("\n")
+            if enharmonics_info:
+                for s in self._create_strings_for_enharmonics_info(enharmonics_info):
+                    output.write(s + "\n")
         if verbose:
             print("file written to " + path_to_write_file)
 
@@ -534,10 +418,25 @@ class Pitch():
         if verbose:
             print("file written to " + path_to_write_file)
 
+    def _enharmonics_search_results(
+        self,
+        tolerance, limit, exclude_primes, max_symbols, max_hd, max_candidates, sort_by, lookup_table
+    ) -> tuple[list, list[str]]:
+        """Run get_enharmonics and build header strings; shared by the two write methods."""
+        enharmonics_info = self.get_enharmonics(
+            tolerance=tolerance, limit=limit, exclude_primes=exclude_primes,
+            max_symbols=max_symbols, max_hd=max_hd, max_candidates=max_candidates,
+            sort_by=sort_by, lookup_table=lookup_table)
+        header_strings = self._create_strings_for_enharmonics_header(
+            tolerance=tolerance, limit=limit, exclude_primes=exclude_primes,
+            max_symbols=max_symbols, max_hd=max_hd, max_candidates=max_candidates,
+            sort_by=sort_by, num_qualified_candidates=len(enharmonics_info))
+        return enharmonics_info, header_strings
+
     def _complement(self) -> fractions.Fraction:
         """Return 2 / self.ratio (the octave complement)."""
         complement = 2 / self.ratio
-        return(complement)
+        return complement
 
     def _constituent_primes(self) -> list[int]:
         """Return the primes with non-zero exponents in self.monzo."""
@@ -548,7 +447,7 @@ class Pitch():
         for i, x in enumerate(monzo):
             if abs(x) > 0:
                 constituent_primes.append(vector_primes[i])
-        return(constituent_primes)
+        return constituent_primes
 
     def _create_strings_for_enharmonics_header(
         self,
@@ -567,7 +466,7 @@ class Pitch():
             output = []
             if len(exclude_primes) > 0:
                 output.append("excluded primes: " + str(exclude_primes))
-            return(output)
+            return output
                     
         header_strings = ["ORIGINAL PITCH INFO"] + self.create_strings_for_print_and_txt(variety = "basic")[2:] + [
             "ENHARMONIC SELECTION CRITERIA", 
@@ -577,7 +476,7 @@ class Pitch():
             "sorted by: " + str(sort_by),
             "total number of qualifying candidates: " + str(num_qualified_candidates)]
                     
-        return(header_strings)
+        return header_strings
 
     def _create_strings_for_enharmonics_info(self, enharmonics_info: list[list]) -> list[str]:
         enharmonics_info_strings = []
@@ -598,19 +497,19 @@ class Pitch():
             enharmonics_info_strings.append("melodic interval from " + str(self.ratio) + ": " + self._fraction_to_proportional_ratio_string(ei))
             enharmonics_info_strings.append("enharmonic interval size (cents): " + str(delta))
             enharmonics_info_strings.append("")
-        return(enharmonics_info_strings)
+        return enharmonics_info_strings
 
     def _distance_in_cents_from_reference(self) -> float:
         distance_in_cents_from_reference = (self.keynum - self.reference_keynum) * 100
-        return(distance_in_cents_from_reference)
+        return distance_in_cents_from_reference
 
     def _fraction_to_proportional_ratio_string(self, f: fractions.Fraction) -> str:
         """Return a fraction formatted as 'numerator:denominator'."""
-        return(str(f.numerator) + ":" + str(f.denominator))
+        return f"{f.numerator}:{f.denominator}"
 
     def _freq(self) -> float:
         freq = float(self.reference_freq * self.ratio)
-        return(freq)
+        return freq
 
     def _harmonic_distance(self, monzo: list[int]) -> float:
         """Return the Tenney harmonic distance: sum of |exp_i| * log2(prime_i)."""
@@ -622,13 +521,13 @@ class Pitch():
             current_exponent = abs(monzo[i])
             current_hd = current_exponent * math.log2(current_prime)
             harmonic_distance += current_hd
-        return(harmonic_distance)
+        return harmonic_distance
 
     def _keynum(self) -> float:
         keynum = utilities_music.cpsmidi(self.freq,
             ref_freq = self.reference_freq, 
             ref_keynum = self.reference_keynum)
-        return(keynum) 
+        return keynum 
 
     def _letter_name_and_octave_and_cents(self) -> str:
         """Return the nearest 12-EDO pitch-class and cent deviation, e.g. 'C4 +14.0'."""
@@ -646,18 +545,15 @@ class Pitch():
         pitch_class_letter_name = pitch_class_letter_name_strings[pitch_class_letter_name_index]
         if pitch_class_letter_name_index == 0:
             pitch_octave += 1
-        return(pitch_class_letter_name + str(pitch_octave) + " " + cents_sign + str(round(pitch_cents * 100, self.precision)))
+        return pitch_class_letter_name + str(pitch_octave) + " " + cents_sign + str(round(pitch_cents * 100, self.precision))
 
     def _lengthen_vector_primes(self, monzo: list[int], vector_primes: list[int]) -> list[int]:
         """Extend vector_primes until it covers all primes indexed by monzo."""
-        if len(monzo) > len(vector_primes):
-            x = vector_primes[-1:][0]
-            while len(vector_primes) < len(monzo):
-                vector_primes = prime_list.PrimeList(max_val = x + 1).primes
-                x += 1
-                if len(vector_primes) >= len(monzo):
-                    break
-        return(vector_primes)
+        x = vector_primes[-1]
+        while len(vector_primes) < len(monzo):
+            x += 1
+            vector_primes = prime_list.PrimeList(max_val=x + 1).primes
+        return vector_primes
 
     def _monzo_from_ratio(self) -> list[int]:
         """Return the prime-exponent vector for self.ratio."""
@@ -666,28 +562,21 @@ class Pitch():
         else:              
             numerators = LONG_LIST_OF_PRIMES.factors(self.ratio.numerator)
             denominators = LONG_LIST_OF_PRIMES.factors(self.ratio.denominator)
-            max_default_prime = self._vector_primes[-1:][0]
-            all_primes = []
-            for x in numerators + denominators:
-                all_primes.append(x[0])
-            max_prime_in_ratio = max(all_primes)
+            max_default_prime = self._vector_primes[-1]
+            max_prime_in_ratio = max(x[0] for x in numerators + denominators)
             if max_prime_in_ratio > max_default_prime:
-                self._vector_primes = prime_list.PrimeList(max_val = max_prime_in_ratio + 1).primes
-            monzo = []
-            for i in range(0, len(self._vector_primes)):
-                monzo.append(0)
+                self._vector_primes = prime_list.PrimeList(max_val=max_prime_in_ratio + 1).primes
+            monzo = [0] * len(self._vector_primes)
             for x in numerators:
-                for i in range(0, len(self._vector_primes)):
-                    current_prime = self._vector_primes[i]
-                    if x[0] == current_prime:
+                for i in range(len(self._vector_primes)):
+                    if x[0] == self._vector_primes[i]:
                         monzo[i] += x[1]
             for x in denominators:
-                for i in range(0, len(self._vector_primes)):
-                    current_prime = self._vector_primes[i]
-                    if x[0] == current_prime:
+                for i in range(len(self._vector_primes)):
+                    if x[0] == self._vector_primes[i]:
                         monzo[i] -= x[1]
         trimmed_monzo = self._trim_monzo(monzo)
-        return(trimmed_monzo)
+        return trimmed_monzo
 
     def _normalized_monzo(self, monzo: list[int]) -> list[int]:
         """Return monzo shifted by octaves so its corresponding ratio lies in [1, 2)."""
@@ -700,18 +589,9 @@ class Pitch():
 
     def _normalized_ratio(self, ratio: fractions.Fraction) -> fractions.Fraction:
         """Return ratio shifted by octaves to lie in [1, 2)."""
-        num = ratio.numerator
-        den = ratio.denominator
-        condition = num / den < 1
-        while condition:
-            num = num * 2
-            condition = num / den < 1
-        condition = num / den >= 2
-        while condition:
-            den = den * 2
-            condition = num / den >= 2
-        normalized_ratio = fractions.Fraction(num, den)
-        return(normalized_ratio)
+        octaves = math.floor(math.log2(ratio))
+        return fractions.Fraction(ratio.numerator, ratio.denominator * (2 ** octaves)) if octaves >= 0 \
+            else fractions.Fraction(ratio.numerator * (2 ** -octaves), ratio.denominator)
         
     def _notation(self) -> tuple[str, str]:
         """Return the HEJI2 notation as (accidental_string, letter_name)."""
@@ -721,10 +601,10 @@ class Pitch():
         vector_primes = self._lengthen_vector_primes(monzo, vector_primes)
         accidental_undefined = False
         letter_name_undefined = False
-        net_3 = 0 + fund_offset # keep track of how many P5s we are moving at all times
+        net_3 = fund_offset  # running count of perfect-5th steps
         syntonic_arrows = 0
         accidental_characters = []
-        for i in range(0, len(monzo)):
+        for i in range(len(monzo)):
             current_prime = vector_primes[i]
             current_exp = monzo[i]
             if current_prime == 3:
@@ -785,11 +665,11 @@ class Pitch():
                             accidental_characters.insert(0, acc_char)
                     else:
                         accidental_characters.insert(0, acc_char)
-            return()
+            return
 
         if abs(net_3) < 4:
             add_5_limit_sign(["N", "q", "p", "o", "n", "m", "l", "k", "M"])
-        elif abs(net_3) > 3 and abs(net_3) < 11:
+        elif 3 < abs(net_3) < 11:
             if net_3 > 0:
                 add_5_limit_sign(["P", "y", "x", "w", "v", "u", "t", "s", "O"])
             else:
@@ -814,18 +694,10 @@ class Pitch():
                 for _ in range(double_three):
                     accidental_characters.insert(1, "E")
         accidental_characters = list(reversed(accidental_characters))
-        accidental_string = ""
         letter_names = ["D", "A", "E", "B", "F", "C", "G"]
-        if letter_name_undefined:
-            letter_name = "undefined"
-        else:
-            letter_name = letter_names[net_3 % 7]
-        if accidental_undefined:
-            accidental_string = "undefined"
-        else:
-            for x in accidental_characters:
-                accidental_string += x
-        return((accidental_string, letter_name))
+        letter_name = "undefined" if letter_name_undefined else letter_names[net_3 % 7]
+        accidental_string = "undefined" if accidental_undefined else "".join(accidental_characters)
+        return (accidental_string, letter_name)
 
     def _pitch_info(self) -> list[list]:
         """Return [[basic_info], [normalized_info], [reference_info]] attribute lists."""
@@ -849,7 +721,7 @@ class Pitch():
             self.reference_pitch,
             self.reference_keynum,
             self.reference_freq]
-        return([basic_info, normalized_info, reference_info])
+        return [basic_info, normalized_info, reference_info]
 
     def _ratio_from_monzo(self) -> fractions.Fraction:
         monzo = self.monzo
@@ -857,7 +729,7 @@ class Pitch():
         vector_primes = self._lengthen_vector_primes(monzo, vector_primes)
         numerator = 1
         denominator = 1
-        for i in range(0, len(monzo)):
+        for i in range(len(monzo)):
             current_prime = vector_primes[i]
             current_exp = monzo[i]
             if current_exp > 0:
@@ -865,11 +737,11 @@ class Pitch():
             if current_exp < 0:
                 denominator = denominator * (current_prime ** abs(current_exp))
         ratio = utilities_general.tuple_to_fraction((numerator, denominator))
-        return(ratio)
+        return ratio
 
-    def _reference_keynum_and_fund_offset_from_pitch_letter_name_and_octave(self) -> list[int] | None:
+    def _parse_reference_pitch(self) -> list[int] | None:
         """Parse self.reference_pitch into [keynum, fund_offset], or None if invalid."""
-        rp_string = str(self.reference_pitch) + ""
+        rp_string = str(self.reference_pitch)
         possible_letter_names = ["F", "C", "G", "D", "A", "E", "B"]
         possible_keynum_classes = [5, 0, 7, 2, 9, 4, 11]
         letter_name = None
@@ -900,7 +772,7 @@ class Pitch():
                         keynum_class -= 1
                 keynum = 12 + (12 * octave_number) + keynum_class
                 output = [keynum, fund_offset]
-        return(output)
+        return output
 
     def _trim_monzo(self, monzo: list[int]) -> list[int]:
         """Remove trailing zero exponents from monzo."""
@@ -909,4 +781,4 @@ class Pitch():
             if abs(x) > 0:
                 index_of_highest_nonzero_exponent = i
         trimmed_monzo = monzo[:index_of_highest_nonzero_exponent + 1]
-        return(trimmed_monzo)
+        return trimmed_monzo
