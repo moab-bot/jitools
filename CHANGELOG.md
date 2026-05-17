@@ -18,6 +18,8 @@
 
 ### Bug fixes
 - All write methods now correctly expand `~` in `output_path` (e.g. `"~/Desktop/myfile.txt"`).
+- `Pitch.get_enharmonics` (and the methods that call it) now correctly expand `~` in `lookup_table`
+  when a file path string is provided.
 - `Pitch.write_enharmonics_info_to_csv`: when the search returns zero candidates, no file is written;
   `verbose=True` no longer incorrectly prints "file written to ..." in that case.
 

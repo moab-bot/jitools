@@ -176,7 +176,7 @@ class Pitch():
         if isinstance(lookup_table, list):
             data = [[str(monzo), str(pc)] for monzo, pc in lookup_table]
         else:
-            path = lookup_table if lookup_table is not None else constants.RESOURCES_DIRECTORY + "/enharmonic_lookup_table.csv"
+            path = os.path.expanduser(lookup_table) if lookup_table is not None else constants.RESOURCES_DIRECTORY + "/enharmonic_lookup_table.csv"
             with open(path, newline="") as f:
                 reader = csv.reader(f)
                 data = list(reader)

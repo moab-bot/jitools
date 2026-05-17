@@ -452,3 +452,12 @@ class TestFileIO:
         with open(path, newline="") as f:
             first_line = f.readline()
         assert first_line.startswith(",")
+
+    def test_get_enharmonics_lookup_table_tilde_expansion(self, tmp_path, monkeypatch):
+        import shutil
+        bundled = constants.RESOURCES_DIRECTORY + "/enharmonic_lookup_table.csv"
+        shutil.copy(bundled, tmp_path / "table.csv")
+        monkeypatch.setenv("HOME", str(tmp_path))
+        result = Pitch(p=(81, 80)).get_enharmonics(lookup_table="~/table.csv")
+        assert isinstance(result, list)
+        assert len(result) > 0
